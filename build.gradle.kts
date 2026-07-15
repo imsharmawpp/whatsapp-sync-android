@@ -4,6 +4,14 @@ plugins {
     alias(libs.plugins.kotlin.android) apply false
 }
 
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        maven(url = "https://maven.google.com")
+    }
+}
+
 tasks.register("clean", Delete::class) {
     delete(rootProject.buildDir)
 }
