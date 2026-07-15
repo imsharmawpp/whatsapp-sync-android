@@ -14,8 +14,8 @@ compose-material3 = "1.2.1"
 kotlin = "1.9.24"
 kotlin-serialization = "1.6.3"
 androidx-navigation = "2.8.1"
-google-auth-client = "2.25.0"
-google-sheets-api = "v4-rev20240508-2.0.0"
+google-auth-client = "1.11.0"
+google-sheets-api = "v4-rev614-1.25.0"
 okhttp = "4.12.0"
 
 [libraries]

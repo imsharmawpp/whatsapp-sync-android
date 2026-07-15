@@ -10,6 +10,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven(url = "https://maven.google.com")
+        maven(url = "https://repo.maven.apache.org/maven2")
     }
 }
 
