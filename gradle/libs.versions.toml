@@ -14,8 +14,6 @@ compose-material3 = "1.2.1"
 kotlin = "1.9.24"
 kotlin-serialization = "1.6.3"
 androidx-navigation = "2.8.1"
-google-auth-client = "1.11.0"
-google-sheets-api = "v4-rev20240115-2.0.0"
 okhttp = "4.12.0"
 
 [libraries]
@@ -37,8 +35,6 @@ compose-activity = { group = "androidx.activity", name = "activity-compose", ver
 junit = { group = "junit", name = "junit", version = "4.13.2" }
 kotlin-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlin-serialization" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "androidx-navigation" }
-google-auth-client = { group = "com.google.auth", name = "google-auth-library-oauth2-http", version.ref = "google-auth-client" }
-google-sheets-api = { group = "com.google.apis", name = "google-api-services-sheets", version.ref = "google-sheets-api" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 
 [plugins]

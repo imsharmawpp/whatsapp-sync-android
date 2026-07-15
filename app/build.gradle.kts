@@ -63,8 +63,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewModelCompose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlin.serialization)
-    implementation(libs.google.auth.client)
-    implementation(libs.google.sheets.api)
     implementation(libs.okhttp)
     
     debugImplementation(libs.compose.ui.tooling)

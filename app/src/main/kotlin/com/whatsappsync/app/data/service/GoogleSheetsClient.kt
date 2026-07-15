@@ -1,46 +1,36 @@
 package com.whatsappsync.app.data.service
 
 import android.content.Context
-import com.google.api.services.sheets.v4.Sheets
-import com.google.api.services.sheets.v4.model.ValueRange
-import com.google.auth.oauth2.OAuth2Credentials
-import com.google.auth.transport.http.HttpTransportFactory
 import com.whatsappsync.app.data.models.Message
 import com.whatsappsync.app.data.repository.SharedPreferencesManager
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 /**
- * Client for interacting with Google Sheets API
+ * Client for interacting with Google Sheets API via REST
+ * Uses direct HTTP calls instead of Google client library to avoid dependency issues
  */
 class GoogleSheetsClient(private val context: Context) {
     
+    private val client = OkHttpClient()
     private val preferencesManager = SharedPreferencesManager(context)
-    private var sheetsService: Sheets? = null
-    
-    private fun getAuthenticatedSheetsService(): Sheets? {
-        val accessToken = preferencesManager.getGoogleAccessToken() ?: return null
-        
-        val credentials = OAuth2Credentials.newBuilder()
-            .setAccessToken(com.google.auth.oauth2.AccessToken(accessToken, null))
-            .build()
-        
-        return Sheets.Builder(
-            HttpTransportFactory.DEFAULT.create(),
-            com.google.api.client.json.jackson2.JacksonFactory.getDefaultInstance(),
-            credentials
-        )
-            .setApplicationName("WhatsApp Sync")
-            .build()
-    }
+    private val sheetsApiUrl = "https://sheets.googleapis.com/v4/spreadsheets"
     
     suspend fun appendMessagesToSheet(messages: List<Message>): Result<Int> = runCatching {
+        val accessToken = preferencesManager.getGoogleAccessToken()
+            ?: throw IllegalStateException("Not authenticated with Google")
+        
         val spreadsheetId = preferencesManager.getSpreadsheetId()
             ?: throw IllegalStateException("Spreadsheet ID not configured")
-        
-        val service = getAuthenticatedSheetsService()
-            ?: throw IllegalStateException("Not authenticated with Google")
         
         val syncedIds = preferencesManager.getSyncedMessageIds()
         val newMessages = messages.filter { it.uniqueId !in syncedIds }
@@ -49,6 +39,7 @@ class GoogleSheetsClient(private val context: Context) {
             return@runCatching 0
         }
         
+        // Build JSON request body
         val values = newMessages.map { message ->
             listOf(
                 formatTimestamp(message.timestamp),
@@ -59,13 +50,24 @@ class GoogleSheetsClient(private val context: Context) {
             )
         }
         
-        val body = ValueRange()
-            .setValues(values)
+        val requestBody = buildJsonObject {
+            put("values", JsonArray(values.map { row ->
+                JsonArray(row.map { JsonPrimitive(it) })
+            }))
+        }
         
-        val result = service.spreadsheets().values()
-            .append(spreadsheetId, "Sheet1", body)
-            .setValueInputOption("USER_ENTERED")
-            .execute()
+        val request = Request.Builder()
+            .url("$sheetsApiUrl/$spreadsheetId/values/Sheet1!A:E:append?valueInputOption=USER_ENTERED")
+            .header("Authorization", "Bearer $accessToken")
+            .header("Content-Type", "application/json")
+            .post(requestBody.toString().toRequestBody("application/json".toMediaType()))
+            .build()
+        
+        val response = client.newCall(request).execute()
+        
+        if (!response.isSuccessful) {
+            throw Exception("API Error: ${response.code} - ${response.message}")
+        }
         
         // Update synced message IDs
         val updatedSyncedIds = syncedIds.toMutableSet()
@@ -94,7 +96,6 @@ class GoogleSheetsClient(private val context: Context) {
     
     fun clearAuthentication() {
         preferencesManager.clearGoogleAuth()
-        sheetsService = null
     }
     
     private fun formatTimestamp(timestamp: Long): String {
