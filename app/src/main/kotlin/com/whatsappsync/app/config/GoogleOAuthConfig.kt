@@ -36,7 +36,7 @@ object GoogleOAuthConfig {
      * 1. Open your Google Sheet
      * 2. Copy the ID from the URL: docs.google.com/spreadsheets/d/[SHEET_ID]/edit
      */
-    const val DEFAULT_SHEET_ID = "" // Leave empty or paste your sheet ID here
+    const val DEFAULT_SHEET_ID = "i0qFk_OpEP_foWfyt8F11IM340h5Fu7Aqo4rUJHqmaM8"
     
     /**
      * WhatsApp Business Package Name
