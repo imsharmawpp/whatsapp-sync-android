@@ -66,9 +66,4 @@ dependencies {
     implementation(libs.okhttp)
     
     debugImplementation(libs.compose.ui.tooling)
-    
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.test.ext)
-    androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(libs.androidx.test.rules)
 }
