@@ -52,7 +52,7 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtimeCompose)
-    implementation(libs.androidx.activity.compose)
+    implementation(libs.compose.activity)
     implementation(platform(libs.compose.ui))
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
