@@ -23,6 +23,25 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    - name: Download Gradle Wrapper JAR
+      run: |
+        if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+          mkdir -p gradle/wrapper
+          echo "Downloading Gradle 8.5 wrapper JAR..."
+          cd gradle/wrapper
+          # Try multiple sources
+          curl -L -o gradle-wrapper.jar "https://github.com/gradle/gradle/raw/v8.5.0/gradle/wrapper/gradle-wrapper.jar" || \
+          curl -L -o gradle-wrapper.jar "https://raw.githubusercontent.com/gradle/gradle/v8.5.0/gradle/wrapper/gradle-wrapper.jar" || \
+          (echo "Downloading full Gradle distribution..." && \
+           cd /tmp && \
+           curl -L -o gradle.zip "https://services.gradle.org/distributions/gradle-8.5-all.zip" && \
+           unzip -q gradle.zip && \
+           cp gradle-8.5/lib/gradle-wrapper.jar "${GITHUB_WORKSPACE}/gradle/wrapper/" && \
+           rm -rf gradle-8.5 gradle.zip)
+          cd "${GITHUB_WORKSPACE}"
+          ls -lh gradle/wrapper/gradle-wrapper.jar
+        fi
+
     - name: Build APK
       run: |
         chmod +x gradlew
