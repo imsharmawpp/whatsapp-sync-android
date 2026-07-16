@@ -24,36 +24,16 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
-    - name: Set up Gradle Wrapper
-      run: |
-        if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-          echo "Downloading Gradle wrapper..."
-          cd gradle/wrapper
-          curl -L -o gradle-wrapper.jar "https://cdn.jsdelivr.net/gh/gradle/gradle@v8.5.0/gradle-wrapper-8.5.jar" || \
-          curl -L -o gradle-wrapper.jar "https://raw.githubusercontent.com/gradle/gradle/v8.5.0/gradle/wrapper/gradle-wrapper.jar" || \
-          (curl -L -o gradle-all.zip "https://downloads.gradle-dn.com/distributions/gradle-8.5-all.zip" && unzip -p gradle-all.zip gradle-8.5/lib/gradle-wrapper.jar > gradle-wrapper.jar && rm gradle-all.zip)
-          cd ../..
-        fi
-        ls -lh gradle/wrapper/gradle-wrapper.jar
-
-    - name: Grant execute permission to Gradle
-      run: chmod +x ./gradlew
-
-    - name: Build APK with detailed output
-      run: |
-        ./gradlew assembleDebug --stacktrace 2>&1 | tee build.log
-        if [ ${PIPESTATUS[0]} -ne 0 ]; then
-          echo "=== BUILD FAILED - Last 200 lines of output ==="
-          tail -200 build.log
-          exit 1
-        fi
-
-    - name: Upload build log on failure
-      if: failure()
-      uses: actions/upload-artifact@v4
+    - name: Set up Gradle
+      uses: gradle-actions/gradle-build-action@v2
       with:
-        name: build-logs
-        path: build.log
+        gradle-version: 8.5
+
+    - name: Build APK
+      uses: gradle-actions/gradle-build-action@v2
+      with:
+        arguments: assembleDebug --stacktrace
+        gradle-version: 8.5
 
     - name: Find APK files
       if: success()
