@@ -1,15 +1,32 @@
 package com.whatsappsync.app.data.models
 
+import java.security.MessageDigest
+import java.util.Locale
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Message(
     val phoneNumber: String,
     val senderName: String,
     val messageText: String,
     val timestamp: Long,
-    val uniqueId: String = generateUniqueId(phoneNumber, messageText, timestamp)
+    val conversationName: String = senderName,
+    val uniqueId: String = generateUniqueId(conversationName, senderName, messageText, timestamp)
 )
 
-fun generateUniqueId(phoneNumber: String, messageText: String, timestamp: Long): String {
-    return "$phoneNumber|$messageText|$timestamp".hashCode().toString()
+fun generateUniqueId(
+    conversationName: String,
+    senderName: String,
+    messageText: String,
+    timestamp: Long
+): String {
+    val normalized = listOf(conversationName, senderName, messageText)
+        .joinToString("|") { it.trim().lowercase(Locale.ROOT).replace(Regex("\\s+"), " ") }
+    // Accessibility events can repeat within the same minute with slightly different event times.
+    val minuteBucket = timestamp / 60_000L
+    return MessageDigest.getInstance("SHA-256")
+        .digest("$normalized|$minuteBucket".toByteArray())
+        .joinToString("") { "%02x".format(it) }
 }
 
 data class SyncResult(

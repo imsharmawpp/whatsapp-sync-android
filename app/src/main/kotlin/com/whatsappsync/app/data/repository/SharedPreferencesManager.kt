@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.whatsappsync.app.data.models.Message
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class SharedPreferencesManager(context: Context) {
@@ -52,6 +54,31 @@ class SharedPreferencesManager(context: Context) {
         return encryptedSharedPreferences.getStringSet("synced_message_ids", emptySet()) ?: emptySet()
     }
     
+    fun savePendingMessages(messages: List<Message>) {
+        encryptedSharedPreferences.edit()
+            .putString("pending_messages", Json.encodeToString(messages.distinctBy { it.uniqueId }))
+            .apply()
+    }
+
+    fun getPendingMessages(): List<Message> {
+        val value = encryptedSharedPreferences.getString("pending_messages", null) ?: return emptyList()
+        return runCatching { Json.decodeFromString<List<Message>>(value) }.getOrDefault(emptyList())
+    }
+
+    fun addPendingMessage(message: Message) {
+        val messages = getPendingMessages().toMutableList()
+        if (messages.none { it.uniqueId == message.uniqueId } &&
+            message.uniqueId !in getSyncedMessageIds()
+        ) {
+            messages += message
+            savePendingMessages(messages)
+        }
+    }
+
+    fun removePendingMessages(ids: Set<String>) {
+        savePendingMessages(getPendingMessages().filterNot { it.uniqueId in ids })
+    }
+
     fun saveLastSyncTime(time: Long) {
         encryptedSharedPreferences.edit().putLong("last_sync_time", time).apply()
     }

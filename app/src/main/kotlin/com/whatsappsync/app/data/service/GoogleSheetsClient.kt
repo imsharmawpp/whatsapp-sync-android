@@ -3,6 +3,10 @@ package com.whatsappsync.app.data.service
 import android.content.Context
 import com.whatsappsync.app.data.models.Message
 import com.whatsappsync.app.data.repository.SharedPreferencesManager
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.concurrent.TimeUnit
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -11,100 +15,80 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
-/**
- * Client for interacting with Google Sheets API via REST
- * Uses direct HTTP calls instead of Google client library to avoid dependency issues
- */
-class GoogleSheetsClient(private val context: Context) {
-    
-    private val client = OkHttpClient()
-    private val preferencesManager = SharedPreferencesManager(context)
+class GoogleSheetsClient(context: Context) {
+    class AuthenticationExpiredException : Exception("Google authorization expired. Sign in again.")
+
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(20, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .callTimeout(45, TimeUnit.SECONDS)
+        .build()
+    private val preferencesManager = SharedPreferencesManager(context.applicationContext)
     private val sheetsApiUrl = "https://sheets.googleapis.com/v4/spreadsheets"
-    
-    suspend fun appendMessagesToSheet(messages: List<Message>): Result<Int> = runCatching {
+
+    suspend fun appendMessagesToSheet(
+        messages: List<Message>,
+        onProgress: (uploaded: Int, total: Int) -> Unit = { _, _ -> }
+    ): Result<Int> = runCatching {
         val accessToken = preferencesManager.getGoogleAccessToken()
-            ?: throw IllegalStateException("Not authenticated with Google")
-        
+            ?: throw AuthenticationExpiredException()
         val spreadsheetId = preferencesManager.getSpreadsheetId()
-            ?: throw IllegalStateException("Spreadsheet ID not configured")
-        
+            ?: throw IllegalStateException("Spreadsheet ID is not configured")
         val syncedIds = preferencesManager.getSyncedMessageIds()
-        val newMessages = messages.filter { it.uniqueId !in syncedIds }
-        
-        if (newMessages.isEmpty()) {
-            return@runCatching 0
+        val newMessages = messages.distinctBy { it.uniqueId }.filter { it.uniqueId !in syncedIds }
+        if (newMessages.isEmpty()) return@runCatching 0
+
+        var uploaded = 0
+        newMessages.chunked(BATCH_SIZE).forEach { batch ->
+            appendBatch(spreadsheetId, accessToken, batch)
+            val completedIds = preferencesManager.getSyncedMessageIds().toMutableSet()
+            completedIds.addAll(batch.map { it.uniqueId })
+            preferencesManager.saveSyncedMessageIds(completedIds)
+            preferencesManager.removePendingMessages(batch.map { it.uniqueId }.toSet())
+            uploaded += batch.size
+            onProgress(uploaded, newMessages.size)
         }
-        
-        // Build JSON request body
-        val values = newMessages.map { message ->
+        preferencesManager.saveLastSyncTime(System.currentTimeMillis())
+        uploaded
+    }
+
+    private fun appendBatch(spreadsheetId: String, accessToken: String, messages: List<Message>) {
+        val values = messages.map { message ->
             listOf(
-                formatTimestamp(message.timestamp),
-                message.phoneNumber,
-                message.senderName,
-                message.messageText,
-                getCurrentDate()
+                formatTimestamp(message.timestamp), message.phoneNumber, message.senderName,
+                message.messageText, getCurrentDate()
             )
         }
-        
-        val requestBody = buildJsonObject {
-            put("values", JsonArray(values.map { row ->
-                JsonArray(row.map { JsonPrimitive(it) })
-            }))
-        }
-        
+        val body = buildJsonObject {
+            put("values", JsonArray(values.map { row -> JsonArray(row.map(::JsonPrimitive)) }))
+        }.toString().toRequestBody("application/json".toMediaType())
         val request = Request.Builder()
             .url("$sheetsApiUrl/$spreadsheetId/values/Sheet1!A:E:append?valueInputOption=USER_ENTERED")
             .header("Authorization", "Bearer $accessToken")
-            .header("Content-Type", "application/json")
-            .post(requestBody.toString().toRequestBody("application/json".toMediaType()))
+            .post(body)
             .build()
-        
-        val response = client.newCall(request).execute()
-        
-        if (!response.isSuccessful) {
-            throw Exception("API Error: ${response.code} - ${response.message}")
+
+        client.newCall(request).execute().use { response ->
+            if (response.code == 401 || response.code == 403) throw AuthenticationExpiredException()
+            if (!response.isSuccessful) {
+                val detail = response.body?.string()?.take(500).orEmpty()
+                throw IllegalStateException("Google Sheets error ${response.code}: ${detail.ifBlank { response.message }}")
+            }
         }
-        
-        // Update synced message IDs
-        val updatedSyncedIds = syncedIds.toMutableSet()
-        updatedSyncedIds.addAll(newMessages.map { it.uniqueId })
-        preferencesManager.saveSyncedMessageIds(updatedSyncedIds)
-        preferencesManager.saveLastSyncTime(System.currentTimeMillis())
-        
-        newMessages.size
     }
-    
-    fun saveAccessToken(token: String) {
-        preferencesManager.saveGoogleAccessToken(token)
-    }
-    
-    fun saveRefreshToken(token: String) {
-        preferencesManager.saveGoogleRefreshToken(token)
-    }
-    
-    fun saveSpreadsheetId(id: String) {
-        preferencesManager.saveSpreadsheetId(id)
-    }
-    
-    fun isAuthenticated(): Boolean {
-        return preferencesManager.getGoogleAccessToken() != null
-    }
-    
-    fun clearAuthentication() {
-        preferencesManager.clearGoogleAuth()
-    }
-    
-    private fun formatTimestamp(timestamp: Long): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        return sdf.format(Date(timestamp))
-    }
-    
-    private fun getCurrentDate(): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-        return sdf.format(Date())
-    }
+
+    fun isAuthenticated() = preferencesManager.getGoogleAccessToken() != null
+    fun clearAuthentication() = preferencesManager.clearGoogleAuth()
+    fun saveAccessToken(token: String) = preferencesManager.saveGoogleAccessToken(token)
+    fun saveRefreshToken(token: String) = preferencesManager.saveGoogleRefreshToken(token)
+    fun saveSpreadsheetId(id: String) = preferencesManager.saveSpreadsheetId(id)
+
+    private fun formatTimestamp(timestamp: Long) =
+        SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(timestamp))
+    private fun getCurrentDate() =
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+    companion object { private const val BATCH_SIZE = 200 }
 }

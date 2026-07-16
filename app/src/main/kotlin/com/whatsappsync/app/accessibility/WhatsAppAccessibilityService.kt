@@ -11,8 +11,8 @@ import com.whatsappsync.app.data.service.WhatsAppMessageReader
 class WhatsAppAccessibilityService : AccessibilityService() {
     
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (event?.packageName.toString().contains("whatsapp")) {
-            WhatsAppMessageReader.processAccessibilityEvent(event!!)
+        if (event?.packageName?.toString() == "com.whatsapp.w4b") {
+            WhatsAppMessageReader.processAccessibilityEvent(event)
         }
     }
     
@@ -22,6 +22,7 @@ class WhatsAppAccessibilityService : AccessibilityService() {
     
     override fun onCreate() {
         super.onCreate()
+        WhatsAppMessageReader.initialize(applicationContext)
     }
     
     override fun onServiceConnected() {
