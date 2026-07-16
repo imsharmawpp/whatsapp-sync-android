@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.accessibility.AccessibilityEvent
 import com.whatsappsync.app.data.models.Message
 import com.whatsappsync.app.data.repository.SharedPreferencesManager
+import com.whatsappsync.app.permissions.PermissionManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -19,7 +20,8 @@ object WhatsAppMessageReader {
     }
 
     fun processAccessibilityEvent(event: AccessibilityEvent) {
-        if (event.packageName?.toString() != WHATSAPP_BUSINESS_PACKAGE) return
+        val packageName = event.packageName?.toString() ?: return
+        if (packageName !in PermissionManager.WHATSAPP_PACKAGES) return
         if (event.eventType !in SUPPORTED_EVENT_TYPES) return
 
         val rawParts = buildList {
@@ -28,20 +30,22 @@ object WhatsAppMessageReader {
         }.filter { it.isUsefulWhatsAppText() }.distinct()
 
         if (rawParts.isEmpty()) return
-        val source = event.source
-        val conversation = source?.packageName?.toString().orEmpty()
-            .takeUnless { it == WHATSAPP_BUSINESS_PACKAGE }
-            ?: "WhatsApp Business"
+        val conversation = rawParts.first()
         val sender = rawParts.first()
         val body = rawParts.drop(1).joinToString(" ").ifBlank { rawParts.first() }
+        val storage = store
+        val detectedPhone = sender.takeIf { PHONE_PATTERN.containsMatchIn(it) }.orEmpty()
+        val mappedPhone = storage?.getPhoneMapping(conversation).orEmpty()
 
         addMessage(
             Message(
-                phoneNumber = sender.takeIf { PHONE_PATTERN.containsMatchIn(it) }.orEmpty(),
+                phoneNumber = detectedPhone.ifBlank { mappedPhone },
                 senderName = sender,
                 messageText = body,
                 timestamp = event.eventTime.takeIf { it > 0 } ?: System.currentTimeMillis(),
-                conversationName = conversation
+                conversationName = conversation,
+                source = "accessibility",
+                direction = "unknown",
             )
         )
     }
@@ -69,7 +73,6 @@ object WhatsAppMessageReader {
         return normalized !in IGNORED_TEXT && !normalized.startsWith("loading")
     }
 
-    private const val WHATSAPP_BUSINESS_PACKAGE = "com.whatsapp.w4b"
     private val PHONE_PATTERN = Regex("\\+?[0-9][0-9 ()-]{6,}")
     private val SUPPORTED_EVENT_TYPES = setOf(
         AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED,

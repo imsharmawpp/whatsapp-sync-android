@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
     <queries>
+        <package android:name="com.whatsapp" />
         <package android:name="com.whatsapp.w4b" />
     </queries>
 
@@ -55,8 +56,9 @@
 
         <service
             android:name=".accessibility.WhatsAppAccessibilityService"
-            android:enabled="false"
+            android:enabled="true"
             android:exported="false"
+            android:label="WhatsApp Sync accessibility"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />

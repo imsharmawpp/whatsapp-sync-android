@@ -2,7 +2,7 @@
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/app_description"
     android:accessibilityEventTypes="typeWindowContentChanged|typeNotificationStateChanged"
-    android:packageNames="com.whatsapp.w4b"
+    android:packageNames="com.whatsapp,com.whatsapp.w4b"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagReportViewIds"
     android:canRetrieveWindowContent="true"

@@ -15,13 +15,12 @@ import com.whatsappsync.app.ui.navigation.AppNavigation
 class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        setIntent(intent)
-        ShareImportCoordinator.accept(intent)
+        handleIncomingShare(intent)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        ShareImportCoordinator.accept(intent)
+        handleIncomingShare(intent)
         setContent {
             WhatsAppSyncTheme {
                 Surface(
@@ -31,6 +30,15 @@ class MainActivity : ComponentActivity() {
                     AppNavigation()
                 }
             }
+        }
+    }
+
+    private fun handleIncomingShare(incomingIntent: Intent) {
+        ShareImportCoordinator.accept(incomingIntent)
+        if (incomingIntent.action == Intent.ACTION_SEND || incomingIntent.action == Intent.ACTION_SEND_MULTIPLE) {
+            setIntent(Intent(incomingIntent).setAction(null))
+        } else {
+            setIntent(incomingIntent)
         }
     }
 }

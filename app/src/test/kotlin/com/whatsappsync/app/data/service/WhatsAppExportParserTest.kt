@@ -1,7 +1,11 @@
 package com.whatsappsync.app.data.service
 
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -51,5 +55,33 @@ class WhatsAppExportParserTest {
 
         assertEquals(1, result.messages.size)
         assertTrue(result.messages.single().uniqueId.isNotBlank())
+    }
+
+    @Test
+    fun parsesIosBracketedTimestamp() {
+        val cutoff = dateFormat.parse("6/1/26 12:00 AM")!!.time
+        val text = "[7/10/26, 9:15:00 AM] Alice: From iPhone"
+
+        val result = parser.parseText(text, "Alice", cutoff)
+
+        assertEquals(1, result.messages.size)
+        assertEquals("From iPhone", result.messages.single().messageText)
+    }
+
+    @Test
+    fun readsTxtEntryFromZipExport() {
+        val bytes = ByteArrayOutputStream().also { output ->
+            ZipOutputStream(output).use { zip ->
+                zip.putNextEntry(ZipEntry("WhatsApp Chat with Alice.txt"))
+                zip.write("7/10/26, 9:15 AM - Alice: From ZIP".toByteArray())
+                zip.closeEntry()
+            }
+        }.toByteArray()
+        val cutoff = dateFormat.parse("6/1/26 12:00 AM")!!.time
+
+        val result = parser.parse(ByteArrayInputStream(bytes), "Alice.zip", cutoffMillis = cutoff)
+
+        assertEquals(1, result.messages.size)
+        assertEquals("From ZIP", result.messages.single().messageText)
     }
 }
