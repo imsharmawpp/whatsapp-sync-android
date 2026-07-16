@@ -1,0 +1,34 @@
+[
+    {
+        "merged": "com.whatsappsync.app-merged_res-50:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.whatsappsync.app-main-52:/mipmap-mdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.whatsappsync.app-merged_res-50:/xml_data_extraction_rules.xml.flat",
+        "source": "com.whatsappsync.app-main-52:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "com.whatsappsync.app-merged_res-50:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.whatsappsync.app-main-52:/mipmap-xhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.whatsappsync.app-merged_res-50:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.whatsappsync.app-main-52:/mipmap-hdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.whatsappsync.app-merged_res-50:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.whatsappsync.app-main-52:/mipmap-xxxhdpi/ic_launcher.png"
+    },
+    {
+        "merged": "com.whatsappsync.app-merged_res-50:/xml_backup_schemes.xml.flat",
+        "source": "com.whatsappsync.app-main-52:/xml/backup_schemes.xml"
+    },
+    {
+        "merged": "com.whatsappsync.app-merged_res-50:/xml_accessibility_service_config.xml.flat",
+        "source": "com.whatsappsync.app-main-52:/xml/accessibility_service_config.xml"
+    },
+    {
+        "merged": "com.whatsappsync.app-merged_res-50:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.whatsappsync.app-main-52:/mipmap-xxhdpi/ic_launcher.png"
+    }
+]

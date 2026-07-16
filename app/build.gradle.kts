@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.24"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.23"
 }
 
 android {
@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.security.crypto)
     implementation(libs.kotlin.serialization)
     implementation(libs.okhttp)
 

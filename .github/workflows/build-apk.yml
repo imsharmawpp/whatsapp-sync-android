@@ -14,68 +14,39 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v3
-
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: gradle
 
-    - name: Download Gradle Wrapper JAR
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Restore Gradle wrapper JAR
       run: |
         if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-          mkdir -p gradle/wrapper
-          cd gradle/wrapper
-          echo "Downloading Gradle wrapper jar..."
-          curl -L -o gradle-wrapper.jar "https://raw.githubusercontent.com/gradle/gradle/v8.5.0/gradle/wrapper/gradle-wrapper.jar"
-          if [ ! -f gradle-wrapper.jar ]; then
-            echo "ERROR: Failed to download gradle-wrapper.jar"
-            exit 1
-          fi
-          ls -lh gradle-wrapper.jar
-          cd - > /dev/null
+          curl --fail --location --retry 3 \
+            --output gradle/wrapper/gradle-wrapper.jar \
+            https://raw.githubusercontent.com/gradle/gradle/v8.5.0/gradle/wrapper/gradle-wrapper.jar
         fi
 
-    - name: Verify Gradle setup
+    - name: Validate Gradle wrapper
+      uses: gradle/actions/wrapper-validation@v4
+
+    - name: Build debug APK
       run: |
-        echo "Gradle wrapper jar:"
-        ls -lh gradle/wrapper/gradle-wrapper.jar
-        echo "Gradle wrapper properties:"
-        cat gradle/wrapper/gradle-wrapper.properties
         chmod +x gradlew
-        echo "Testing gradlew command..."
-        ./gradlew --version || (echo "ERROR: gradlew failed"; exit 1)
+        ./gradlew --no-daemon clean assembleDebug --stacktrace
 
-    - name: Build Debug APK
-      run: |
-        echo "Starting Gradle build..."
-        ./gradlew clean assembleDebug -x lint --stacktrace -i
-        echo "Build completed"
+    - name: Verify debug APK
+      run: test -s app/build/outputs/apk/debug/app-debug.apk
 
-    - name: Verify APK generation
-      run: |
-        echo "Checking for APK files..."
-        if find app/build/outputs/apk/debug -name "*.apk" -type f 2>/dev/null | grep -q .; then
-          echo "SUCCESS: APK files found!"
-          find app/build/outputs/apk/debug -name "*.apk" -type f -exec ls -lh {} \;
-        else
-          echo "ERROR: No APK files found in app/build/outputs/apk/debug"
-          find app/build -name "*.apk" -type f 2>/dev/null || echo "No APK files anywhere"
-          exit 1
-        fi
-
-    - name: Upload APK as artifact
+    - name: Upload debug APK
       uses: actions/upload-artifact@v4
       with:
         name: whatsapp-sync-debug
         path: app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
         if-no-files-found: error
-
-    - name: List all APK artifacts
-      if: always()
-      run: |
-        echo "All APK files generated:"
-        find app/build/outputs/apk/debug -type f -exec ls -lh {} \;
