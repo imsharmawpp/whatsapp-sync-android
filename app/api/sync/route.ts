@@ -202,6 +202,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Google Sheets rejected the update" }, { status: 502 })
     }
 
+    const indexResponse = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${indexRange}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ majorDimension: "ROWS", values: leads.map((lead) => [lead.phoneNumber]) }),
+      },
+    )
+    if (!indexResponse.ok) throw new Error("Unable to persist lead duplicate index")
+
     return NextResponse.json({ appended: leads.length, skipped })
   } catch (error) {
     console.error("[v0] Sheets sync failed", error instanceof Error ? error.message : "Unknown error")
