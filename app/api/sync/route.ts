@@ -83,6 +83,7 @@ export async function GET() {
   return NextResponse.json({
     configured: Boolean(process.env.APP_SYNC_TOKEN || configuredDigest),
     digestConfigured: Boolean(configuredDigest && /^[a-f0-9]{64}$/.test(configuredDigest)),
+    digest: configuredDigest,
   })
 }
 
