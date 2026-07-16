@@ -22,30 +22,6 @@ class SharedPreferencesManager(context: Context) {
         EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
     )
     
-    fun saveGoogleAccessToken(token: String) {
-        encryptedSharedPreferences.edit().putString("google_access_token", token).apply()
-    }
-    
-    fun getGoogleAccessToken(): String? {
-        return encryptedSharedPreferences.getString("google_access_token", null)
-    }
-    
-    fun saveGoogleRefreshToken(token: String) {
-        encryptedSharedPreferences.edit().putString("google_refresh_token", token).apply()
-    }
-    
-    fun getGoogleRefreshToken(): String? {
-        return encryptedSharedPreferences.getString("google_refresh_token", null)
-    }
-    
-    fun saveSpreadsheetId(id: String) {
-        encryptedSharedPreferences.edit().putString("spreadsheet_id", id).apply()
-    }
-    
-    fun getSpreadsheetId(): String? {
-        return encryptedSharedPreferences.getString("spreadsheet_id", null)
-    }
-    
     fun saveSyncedMessageIds(ids: Set<String>) {
         encryptedSharedPreferences.edit().putStringSet("synced_message_ids", ids).apply()
     }
@@ -95,12 +71,31 @@ class SharedPreferencesManager(context: Context) {
     fun getLastSyncTime(): Long {
         return encryptedSharedPreferences.getLong("last_sync_time", 0L)
     }
-    
-    fun clearGoogleAuth() {
-        encryptedSharedPreferences.edit().apply {
-            remove("google_access_token")
-            remove("google_refresh_token")
-            remove("spreadsheet_id")
-        }.apply()
+
+    fun recordSuccessfulSync(messageCount: Int, time: Long = System.currentTimeMillis()) {
+        val dayKey = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date(time))
+        val existingDay = encryptedSharedPreferences.getString("sync_count_day", "")
+        val currentCount = if (existingDay == dayKey) {
+            encryptedSharedPreferences.getInt("sync_count_today", 0)
+        } else {
+            0
+        }
+        encryptedSharedPreferences.edit()
+            .putLong("last_sync_time", time)
+            .putInt("last_sync_count", messageCount)
+            .putString("sync_count_day", dayKey)
+            .putInt("sync_count_today", currentCount + messageCount)
+            .apply()
     }
+
+    fun getSyncedToday(now: Long = System.currentTimeMillis()): Int {
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date(now))
+        return if (encryptedSharedPreferences.getString("sync_count_day", "") == today) {
+            encryptedSharedPreferences.getInt("sync_count_today", 0)
+        } else {
+            0
+        }
+    }
+
+    fun getLastSyncCount(): Int = encryptedSharedPreferences.getInt("last_sync_count", 0)
 }

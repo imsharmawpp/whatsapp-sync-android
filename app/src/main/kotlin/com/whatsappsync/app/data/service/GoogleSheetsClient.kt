@@ -42,7 +42,7 @@ class GoogleSheetsClient(context: Context) {
             uploaded += batch.size
             onProgress(uploaded, newMessages.size)
         }
-        preferencesManager.saveLastSyncTime(System.currentTimeMillis())
+        preferencesManager.recordSuccessfulSync(uploaded)
         uploaded
     }
 
