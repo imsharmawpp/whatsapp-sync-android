@@ -65,5 +65,6 @@ dependencies {
     implementation(libs.kotlin.serialization)
     implementation(libs.okhttp)
 
+    testImplementation(libs.junit)
     debugImplementation(libs.compose.ui.tooling)
 }

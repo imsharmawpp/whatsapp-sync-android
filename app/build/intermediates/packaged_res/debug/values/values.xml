@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_description">Sync WhatsApp messages to Google Sheets</string>
+    <string name="app_name">WhatsApp Sync</string>
+    <string name="permission_accessibility_description">Needed to read messages from WhatsApp Business app</string>
+    <string name="permission_accessibility_title">Accessibility Service</string>
+    <string name="permission_contacts_description">Needed to enrich message data with contact names</string>
+    <string name="permission_contacts_title">Contacts</string>
+    <style name="Theme.WhatsAppSync" parent="android:Theme.Material.Light.NoActionBar"/>
+</resources>
