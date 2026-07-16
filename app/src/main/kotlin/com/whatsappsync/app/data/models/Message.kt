@@ -11,6 +11,8 @@ data class Message(
     val messageText: String,
     val timestamp: Long,
     val conversationName: String = senderName,
+    val source: String = "export",
+    val direction: String = "unknown",
     val uniqueId: String = generateUniqueId(conversationName, senderName, messageText, timestamp)
 )
 

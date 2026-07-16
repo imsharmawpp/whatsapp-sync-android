@@ -79,6 +79,15 @@ class SharedPreferencesManager(context: Context) {
         savePendingMessages(getPendingMessages().filterNot { it.uniqueId in ids })
     }
 
+    fun savePhoneMapping(chatName: String, phoneNumber: String) {
+        encryptedSharedPreferences.edit()
+            .putString("phone_${chatName.trim().lowercase()}", phoneNumber.trim())
+            .apply()
+    }
+
+    fun getPhoneMapping(chatName: String): String =
+        encryptedSharedPreferences.getString("phone_${chatName.trim().lowercase()}", "").orEmpty()
+
     fun saveLastSyncTime(time: Long) {
         encryptedSharedPreferences.edit().putLong("last_sync_time", time).apply()
     }
