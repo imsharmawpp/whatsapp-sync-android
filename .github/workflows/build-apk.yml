@@ -27,94 +27,55 @@ jobs:
       run: |
         if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
           mkdir -p gradle/wrapper
-          echo "Downloading Gradle 8.5 wrapper JAR..."
           cd gradle/wrapper
-          # Try multiple sources
-          curl -L -o gradle-wrapper.jar "https://github.com/gradle/gradle/raw/v8.5.0/gradle/wrapper/gradle-wrapper.jar" || \
-          curl -L -o gradle-wrapper.jar "https://raw.githubusercontent.com/gradle/gradle/v8.5.0/gradle/wrapper/gradle-wrapper.jar" || \
-          (echo "Downloading full Gradle distribution..." && \
-           cd /tmp && \
-           curl -L -o gradle.zip "https://services.gradle.org/distributions/gradle-8.5-all.zip" && \
-           unzip -q gradle.zip && \
-           cp gradle-8.5/lib/gradle-wrapper.jar "${GITHUB_WORKSPACE}/gradle/wrapper/" && \
-           rm -rf gradle-8.5 gradle.zip)
-          cd "${GITHUB_WORKSPACE}"
-          ls -lh gradle/wrapper/gradle-wrapper.jar
+          echo "Downloading Gradle wrapper jar..."
+          curl -L -o gradle-wrapper.jar "https://raw.githubusercontent.com/gradle/gradle/v8.5.0/gradle/wrapper/gradle-wrapper.jar"
+          if [ ! -f gradle-wrapper.jar ]; then
+            echo "ERROR: Failed to download gradle-wrapper.jar"
+            exit 1
+          fi
+          ls -lh gradle-wrapper.jar
+          cd - > /dev/null
         fi
 
-    - name: Build APK
+    - name: Verify Gradle setup
       run: |
+        echo "Gradle wrapper jar:"
+        ls -lh gradle/wrapper/gradle-wrapper.jar
+        echo "Gradle wrapper properties:"
+        cat gradle/wrapper/gradle-wrapper.properties
         chmod +x gradlew
-        ./gradlew assembleDebug --stacktrace --no-daemon
-      continue-on-error: true
+        echo "Testing gradlew command..."
+        ./gradlew --version || (echo "ERROR: gradlew failed"; exit 1)
 
-    - name: Check APK build result
+    - name: Build Debug APK
       run: |
-        if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
-          echo "APK built successfully!"
-          ls -lh app/build/outputs/apk/debug/app-debug.apk
+        echo "Starting Gradle build..."
+        ./gradlew clean assembleDebug -x lint --stacktrace -i
+        echo "Build completed"
+
+    - name: Verify APK generation
+      run: |
+        echo "Checking for APK files..."
+        if find app/build/outputs/apk/debug -name "*.apk" -type f 2>/dev/null | grep -q .; then
+          echo "SUCCESS: APK files found!"
+          find app/build/outputs/apk/debug -name "*.apk" -type f -exec ls -lh {} \;
         else
-          echo "APK not found, checking build outputs..."
-          find app/build/outputs -type f -name "*.apk" 2>/dev/null || echo "No APK files found"
-          find app/build -type f -name "*.apk" 2>/dev/null || echo "Still no APK files"
+          echo "ERROR: No APK files found in app/build/outputs/apk/debug"
+          find app/build -name "*.apk" -type f 2>/dev/null || echo "No APK files anywhere"
+          exit 1
         fi
 
-    - name: Find APK files
-      if: success()
-      run: |
-        echo "Searching for APK files..."
-        find app/build -name "*.apk" -type f -exec ls -lh {} \;
-        find app/build -name "*.apk" -type f > /tmp/apk_files.txt
-        cat /tmp/apk_files.txt
-
-    - name: Upload APK artifact
-      if: success()
+    - name: Upload APK as artifact
       uses: actions/upload-artifact@v4
       with:
         name: whatsapp-sync-debug
-        path: app/build/outputs/apk/debug
+        path: app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
+        if-no-files-found: error
 
-    - name: Upload build log on failure
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-log
-        path: build.log
-        retention-days: 7
-
-    - name: Create Release
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: |
-          WhatsApp Sync Android APK
-          
-          Download the APK file to install on your Android device.
-        draft: false
-        prerelease: false
-
-    - name: Upload Release Asset
-      if: startsWith(github.ref, 'refs/tags/')
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: app/build/outputs/apk/debug/app-debug.apk
-        asset_name: whatsapp-sync-${{ github.ref }}.apk
-        asset_content_type: application/vnd.android.package-archive
-
-    - name: Build Status
+    - name: List all APK artifacts
       if: always()
       run: |
-        if [ ${{ job.status }} = "success" ]; then
-          echo "✅ APK built successfully!"
-          echo "📱 Download from: Actions > Build Android APK > whatsapp-sync-debug"
-        else
-          echo "❌ Build failed"
-        fi
+        echo "All APK files generated:"
+        find app/build/outputs/apk/debug -type f -exec ls -lh {} \;
