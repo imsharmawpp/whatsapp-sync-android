@@ -14,6 +14,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
+
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
@@ -24,8 +27,15 @@ jobs:
     - name: Grant execute permission to Gradle
       run: chmod +x ./gradlew
 
-    - name: Build APK
-      run: ./gradlew assembleDebug --stacktrace
+    - name: Build APK with detailed output
+      run: ./gradlew assembleDebug --stacktrace --info 2>&1 | tee build.log
+
+    - name: Upload build log on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs
+        path: build.log
 
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
