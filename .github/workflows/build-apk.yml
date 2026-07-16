@@ -38,7 +38,7 @@ jobs:
 
       - name: Validate sync configuration
         env:
-          SYNC_API_URL: ${{ secrets.SYNC_API_URL }}
+          SYNC_API_URL: https://mailsync-seven.vercel.app/api/sync
           SYNC_API_TOKEN: ${{ secrets.SYNC_API_TOKEN }}
         run: |
           for name in SYNC_API_URL SYNC_API_TOKEN; do
@@ -50,7 +50,7 @@ jobs:
 
       - name: Test and build working debug APK
         env:
-          SYNC_API_URL: ${{ secrets.SYNC_API_URL }}
+          SYNC_API_URL: https://mailsync-seven.vercel.app/api/sync
           SYNC_API_TOKEN: ${{ secrets.SYNC_API_TOKEN }}
           APP_VERSION_CODE: ${{ github.run_number }}
           APP_VERSION_NAME: 1.1.${{ github.run_number }}

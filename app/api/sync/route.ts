@@ -78,15 +78,6 @@ function isAuthorized(request: Request): boolean {
   return actualDigest.length === expectedDigest.length && timingSafeEqual(actualDigest, expectedDigest)
 }
 
-export async function GET() {
-  const configuredDigest = process.env.APP_SYNC_TOKEN_SHA256?.trim().toLowerCase()
-  return NextResponse.json({
-    configured: Boolean(process.env.APP_SYNC_TOKEN || configuredDigest),
-    digestConfigured: Boolean(configuredDigest && /^[a-f0-9]{64}$/.test(configuredDigest)),
-    digest: configuredDigest,
-  })
-}
-
 export async function POST(request: Request) {
   if (!isAuthorized(request)) return unauthorized()
 
@@ -132,7 +123,7 @@ export async function POST(request: Request) {
       message.uniqueId,
     ])
 
-    const range = encodeURIComponent("Messages!A:H")
+    const range = encodeURIComponent("A:H")
     const response = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
       {
