@@ -23,22 +23,22 @@
 16    </queries>
 17
 18    <permission
-18-->[androidx.core:core:1.13.1] /home/vercel-sandbox/.gradle/caches/transforms-3/aff40e922a57d4f214cf296438194a92/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
+18-->[androidx.core:core:1.13.1] /home/vercel-sandbox/.gradle/caches/transforms-3/b2427250e78781b279cc054b5480c987/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
 19        android:name="com.whatsappsync.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
-19-->[androidx.core:core:1.13.1] /home/vercel-sandbox/.gradle/caches/transforms-3/aff40e922a57d4f214cf296438194a92/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
+19-->[androidx.core:core:1.13.1] /home/vercel-sandbox/.gradle/caches/transforms-3/b2427250e78781b279cc054b5480c987/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
 20        android:protectionLevel="signature" />
-20-->[androidx.core:core:1.13.1] /home/vercel-sandbox/.gradle/caches/transforms-3/aff40e922a57d4f214cf296438194a92/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
+20-->[androidx.core:core:1.13.1] /home/vercel-sandbox/.gradle/caches/transforms-3/b2427250e78781b279cc054b5480c987/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
 21
 22    <uses-permission android:name="com.whatsappsync.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
-22-->[androidx.core:core:1.13.1] /home/vercel-sandbox/.gradle/caches/transforms-3/aff40e922a57d4f214cf296438194a92/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
-22-->[androidx.core:core:1.13.1] /home/vercel-sandbox/.gradle/caches/transforms-3/aff40e922a57d4f214cf296438194a92/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
+22-->[androidx.core:core:1.13.1] /home/vercel-sandbox/.gradle/caches/transforms-3/b2427250e78781b279cc054b5480c987/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
+22-->[androidx.core:core:1.13.1] /home/vercel-sandbox/.gradle/caches/transforms-3/b2427250e78781b279cc054b5480c987/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
 23
 24    <application
 24-->/vercel/share/v0-project/app/src/main/AndroidManifest.xml:11:5-44:19
 25        android:allowBackup="true"
 25-->/vercel/share/v0-project/app/src/main/AndroidManifest.xml:12:9-35
 26        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
-26-->[androidx.core:core:1.13.1] /home/vercel-sandbox/.gradle/caches/transforms-3/aff40e922a57d4f214cf296438194a92/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
+26-->[androidx.core:core:1.13.1] /home/vercel-sandbox/.gradle/caches/transforms-3/b2427250e78781b279cc054b5480c987/transformed/core-1.13.1/AndroidManifest.xml:28:18-86
 27        android:dataExtractionRules="@xml/data_extraction_rules"
 27-->/vercel/share/v0-project/app/src/main/AndroidManifest.xml:13:9-65
 28        android:debuggable="true"
@@ -101,75 +101,75 @@
 59        </service>
 60
 61        <provider
-61-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/8f08ea9480b7014da148038d2bc44b56/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+61-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/e663e647e0225cb5bc58a3d83dea0aa4/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
 62            android:name="androidx.startup.InitializationProvider"
-62-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/8f08ea9480b7014da148038d2bc44b56/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:25:13-67
+62-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/e663e647e0225cb5bc58a3d83dea0aa4/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:25:13-67
 63            android:authorities="com.whatsappsync.app.androidx-startup"
-63-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/8f08ea9480b7014da148038d2bc44b56/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:26:13-68
+63-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/e663e647e0225cb5bc58a3d83dea0aa4/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:26:13-68
 64            android:exported="false" >
-64-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/8f08ea9480b7014da148038d2bc44b56/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:27:13-37
+64-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/e663e647e0225cb5bc58a3d83dea0aa4/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:27:13-37
 65            <meta-data
-65-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/8f08ea9480b7014da148038d2bc44b56/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+65-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/e663e647e0225cb5bc58a3d83dea0aa4/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
 66                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-66-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/8f08ea9480b7014da148038d2bc44b56/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:30:17-75
+66-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/e663e647e0225cb5bc58a3d83dea0aa4/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:30:17-75
 67                android:value="androidx.startup" />
-67-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/8f08ea9480b7014da148038d2bc44b56/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:31:17-49
+67-->[androidx.emoji2:emoji2:1.3.0] /home/vercel-sandbox/.gradle/caches/transforms-3/e663e647e0225cb5bc58a3d83dea0aa4/transformed/jetified-emoji2-1.3.0/AndroidManifest.xml:31:17-49
 68            <meta-data
-68-->[androidx.lifecycle:lifecycle-process:2.8.4] /home/vercel-sandbox/.gradle/caches/transforms-3/782a4f407bf139b9dffa3b02dd97fce1/transformed/jetified-lifecycle-process-2.8.4/AndroidManifest.xml:29:13-31:52
+68-->[androidx.lifecycle:lifecycle-process:2.8.4] /home/vercel-sandbox/.gradle/caches/transforms-3/2f4ef69a6ca2c2664acbdad09a7819e5/transformed/jetified-lifecycle-process-2.8.4/AndroidManifest.xml:29:13-31:52
 69                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-69-->[androidx.lifecycle:lifecycle-process:2.8.4] /home/vercel-sandbox/.gradle/caches/transforms-3/782a4f407bf139b9dffa3b02dd97fce1/transformed/jetified-lifecycle-process-2.8.4/AndroidManifest.xml:30:17-78
+69-->[androidx.lifecycle:lifecycle-process:2.8.4] /home/vercel-sandbox/.gradle/caches/transforms-3/2f4ef69a6ca2c2664acbdad09a7819e5/transformed/jetified-lifecycle-process-2.8.4/AndroidManifest.xml:30:17-78
 70                android:value="androidx.startup" />
-70-->[androidx.lifecycle:lifecycle-process:2.8.4] /home/vercel-sandbox/.gradle/caches/transforms-3/782a4f407bf139b9dffa3b02dd97fce1/transformed/jetified-lifecycle-process-2.8.4/AndroidManifest.xml:31:17-49
+70-->[androidx.lifecycle:lifecycle-process:2.8.4] /home/vercel-sandbox/.gradle/caches/transforms-3/2f4ef69a6ca2c2664acbdad09a7819e5/transformed/jetified-lifecycle-process-2.8.4/AndroidManifest.xml:31:17-49
 71            <meta-data
-71-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+71-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
 72                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-72-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+72-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
 73                android:value="androidx.startup" />
-73-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+73-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
 74        </provider>
 75
 76        <activity
-76-->[androidx.compose.ui:ui-tooling-android:1.6.8] /home/vercel-sandbox/.gradle/caches/transforms-3/051829434e3b3c9f472d28a7becf552c/transformed/jetified-ui-tooling-release/AndroidManifest.xml:23:9-25:39
+76-->[androidx.compose.ui:ui-tooling-android:1.6.8] /home/vercel-sandbox/.gradle/caches/transforms-3/dd4db16a7934aa6e42ccd6102df6aaee/transformed/jetified-ui-tooling-release/AndroidManifest.xml:23:9-25:39
 77            android:name="androidx.compose.ui.tooling.PreviewActivity"
-77-->[androidx.compose.ui:ui-tooling-android:1.6.8] /home/vercel-sandbox/.gradle/caches/transforms-3/051829434e3b3c9f472d28a7becf552c/transformed/jetified-ui-tooling-release/AndroidManifest.xml:24:13-71
+77-->[androidx.compose.ui:ui-tooling-android:1.6.8] /home/vercel-sandbox/.gradle/caches/transforms-3/dd4db16a7934aa6e42ccd6102df6aaee/transformed/jetified-ui-tooling-release/AndroidManifest.xml:24:13-71
 78            android:exported="true" />
-78-->[androidx.compose.ui:ui-tooling-android:1.6.8] /home/vercel-sandbox/.gradle/caches/transforms-3/051829434e3b3c9f472d28a7becf552c/transformed/jetified-ui-tooling-release/AndroidManifest.xml:25:13-36
+78-->[androidx.compose.ui:ui-tooling-android:1.6.8] /home/vercel-sandbox/.gradle/caches/transforms-3/dd4db16a7934aa6e42ccd6102df6aaee/transformed/jetified-ui-tooling-release/AndroidManifest.xml:25:13-36
 79
 80        <receiver
-80-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+80-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
 81            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-81-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+81-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
 82            android:directBootAware="false"
-82-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+82-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
 83            android:enabled="true"
-83-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+83-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
 84            android:exported="true"
-84-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+84-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
 85            android:permission="android.permission.DUMP" >
-85-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+85-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
 86            <intent-filter>
-86-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+86-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
 87                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-87-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
-87-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+87-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+87-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
 88            </intent-filter>
 89            <intent-filter>
-89-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+89-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
 90                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-90-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
-90-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+90-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+90-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
 91            </intent-filter>
 92            <intent-filter>
-92-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+92-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
 93                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-93-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
-93-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+93-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+93-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
 94            </intent-filter>
 95            <intent-filter>
-95-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+95-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
 96                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-96-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
-96-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/3662d0dc23db2b67df039d14db81e577/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+96-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+96-->[androidx.profileinstaller:profileinstaller:1.3.1] /home/vercel-sandbox/.gradle/caches/transforms-3/9d56d41483482dea9b5281f4c60cd37e/transformed/jetified-profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
 97            </intent-filter>
 98        </receiver>
 99    </application>
