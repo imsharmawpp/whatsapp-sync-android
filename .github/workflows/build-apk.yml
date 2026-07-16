@@ -48,6 +48,11 @@ jobs:
             fi
           done
 
+      - name: Print sync token digest for recovery
+        env:
+          SYNC_API_TOKEN: ${{ secrets.SYNC_API_TOKEN }}
+        run: printf '%s' "$SYNC_API_TOKEN" | sha256sum | awk '{print "SYNC_API_TOKEN_SHA256=" $1}'
+
       - name: Test and build working debug APK
         env:
           SYNC_API_URL: ${{ secrets.SYNC_API_URL }}
