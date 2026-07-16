@@ -53,14 +53,21 @@ jobs:
           exit $exit_code
         fi
 
+    - name: Find APK files
+      if: success()
+      run: |
+        echo "Searching for APK files..."
+        find app/build -name "*.apk" -type f -exec ls -lh {} \;
+        find app/build -name "*.apk" -type f > /tmp/apk_files.txt
+        cat /tmp/apk_files.txt
+
     - name: Upload APK artifact
       if: success()
       uses: actions/upload-artifact@v4
       with:
         name: whatsapp-sync-debug
-        path: app/build/outputs/apk/debug/*.apk
+        path: app/build/outputs/apk/debug
         retention-days: 30
-        if-no-files-found: warn
 
     - name: Upload build log on failure
       if: failure()
