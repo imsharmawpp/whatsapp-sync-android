@@ -22,27 +22,34 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
-
-    - name: Set up Gradle
-      uses: gradle/actions/setup-gradle@v3
 
     - name: Build APK
-      uses: gradle/actions/setup-gradle@v3
-      with:
-        arguments: assembleDebug --stacktrace
-
-    - name: Find APK files
-      if: success()
-      run: find app/build -name "*.apk" -type f
+      run: |
+        chmod +x gradlew
+        ./gradlew assembleDebug --stacktrace --no-daemon 2>&1 | tee build.log
+        exit_code=${PIPESTATUS[0]}
+        if [ $exit_code -ne 0 ]; then
+          echo "Build failed with exit code $exit_code"
+          tail -100 build.log
+          exit $exit_code
+        fi
 
     - name: Upload APK artifact
       if: success()
       uses: actions/upload-artifact@v4
       with:
         name: whatsapp-sync-debug
-        path: app/build/outputs/apk/debug/
+        path: app/build/outputs/apk/debug/*.apk
         retention-days: 30
+        if-no-files-found: warn
+
+    - name: Upload build log on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log
+        path: build.log
+        retention-days: 7
 
     - name: Create Release
       if: startsWith(github.ref, 'refs/tags/')
