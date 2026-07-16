@@ -78,6 +78,14 @@ function isAuthorized(request: Request): boolean {
   return actualDigest.length === expectedDigest.length && timingSafeEqual(actualDigest, expectedDigest)
 }
 
+export async function GET() {
+  const configuredDigest = process.env.APP_SYNC_TOKEN_SHA256?.trim().toLowerCase()
+  return NextResponse.json({
+    configured: Boolean(process.env.APP_SYNC_TOKEN || configuredDigest),
+    digestConfigured: Boolean(configuredDigest && /^[a-f0-9]{64}$/.test(configuredDigest)),
+  })
+}
+
 export async function POST(request: Request) {
   if (!isAuthorized(request)) return unauthorized()
 
