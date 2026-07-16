@@ -78,6 +78,12 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _state.value = queueState("Reading WhatsApp export…").copy(phase = Phase.Working)
             if (consumeShareAfterStart) ShareImportCoordinator.consume(uris)
+            val myWhatsAppName = store.getWhatsAppName().trim()
+            if (myWhatsAppName.isBlank()) {
+                _state.value = queueState("Set your exact WhatsApp display name in Settings before importing chats.")
+                    .copy(phase = Phase.Error)
+                return@launch
+            }
             runCatching {
                 withContext(Dispatchers.IO) {
                     uris.map { uri ->
@@ -91,7 +97,12 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
             }.onSuccess { parsed ->
-                val messages = parsed.flatMap { it.first.messages }.distinctBy(Message::uniqueId)
+                val messages = parsed
+                    .flatMap { it.first.messages }
+                    .filterNot { it.senderName.trim().equals(myWhatsAppName, ignoreCase = true) }
+                    .groupBy { it.conversationName }
+                    .mapNotNull { (_, chatMessages) -> chatMessages.minByOrNull(Message::timestamp) }
+                    .distinctBy { it.conversationName.trim().lowercase() }
                 val name = if (parsed.size == 1) parsed.first().second else "${parsed.size} exported chats"
                 val preview = ImportPreview(
                     fileName = name,
@@ -112,9 +123,9 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
                     phoneNumbers = numbers,
                     unresolvedChats = unresolved,
                     status = if (messages.isEmpty()) {
-                        "No messages from the previous 90 days were found."
+                        "No client messages were found. Check your WhatsApp display name in Settings."
                     } else {
-                        "Review the export before adding it to the queue."
+                        "Review the first client lead before adding it to the queue."
                     },
                 )
             }.onFailure(::showError)
@@ -154,14 +165,26 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
         retryAction = ::syncPendingMessages
         val pending = store.getPendingMessages()
         if (pending.isEmpty()) {
-            _state.value = queueState("No pending messages to sync.").copy(phase = Phase.Empty)
+            _state.value = queueState("No pending leads to sync.").copy(phase = Phase.Empty)
             return
         }
+        val mappedPending = pending.map { message ->
+            val entered = _state.value.phoneNumbers[message.conversationName].orEmpty()
+            val phone = message.phoneNumber.ifBlank { entered.ifBlank { store.getPhoneMapping(message.conversationName) } }
+            message.copy(phoneNumber = phone)
+        }
+        val missing = mappedPending.filter { it.phoneNumber.isBlank() }.map { it.conversationName }.toSet()
+        if (missing.isNotEmpty()) {
+            _state.update { it.copy(unresolvedChats = missing, status = "Enter a mobile number for each pending lead.") }
+            return
+        }
+        mappedPending.forEach { store.savePhoneMapping(it.conversationName, it.phoneNumber) }
+        store.savePendingMessages(mappedPending)
         viewModelScope.launch {
-            _state.value = queueState("Uploading ${pending.size} messages…")
+            _state.value = queueState("Uploading ${mappedPending.size} leads…")
                 .copy(phase = Phase.Working, progress = 0f)
             val result = withContext(Dispatchers.IO) {
-                sheets.appendMessagesToSheet(pending) { uploaded, total ->
+                sheets.appendMessagesToSheet(mappedPending) { uploaded, total ->
                     _state.update {
                         it.copy(
                             progress = uploaded.toFloat() / total.coerceAtLeast(1),
@@ -171,7 +194,7 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
             result.onSuccess {
-                _state.value = queueState("Synced $it messages to Google Sheets.")
+                _state.value = queueState("Processed $it lead candidates in Google Sheets.")
                     .copy(phase = Phase.Success)
             }.onFailure(::showError)
         }
@@ -183,11 +206,14 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun queueState(status: String = "Ready to sync pending messages."): UiState {
         val pending = store.getPendingMessages()
+        val unresolved = pending.filter { it.phoneNumber.isBlank() }.map { it.conversationName }.toSet()
         return UiState(
             pendingCount = pending.size,
             notificationCount = pending.count { it.source == "notification" },
             exportCount = pending.count { it.source == "export" },
             status = status,
+            phoneNumbers = unresolved.associateWith { store.getPhoneMapping(it) },
+            unresolvedChats = unresolved,
         )
     }
 

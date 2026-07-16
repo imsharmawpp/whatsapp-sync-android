@@ -86,7 +86,7 @@ fun SyncScreen(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    Text("${state.pendingCount} total messages")
+                    Text("${state.pendingCount} total lead candidates")
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -94,12 +94,24 @@ fun SyncScreen(
                         Text("Exports: ${state.exportCount}")
                         Text("Notifications: ${state.notificationCount}")
                     }
+                    if (state.preview == null) {
+                        state.unresolvedChats.forEach { chat ->
+                            OutlinedTextField(
+                                value = state.phoneNumbers[chat].orEmpty(),
+                                onValueChange = { viewModel.setPhoneNumber(chat, it) },
+                                label = { Text("Mobile number for $chat") },
+                                supportingText = { Text("Required once; reused for future notifications") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
                     Button(
                         onClick = viewModel::syncPendingMessages,
                         enabled = !working && state.pendingCount > 0,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text("Sync pending messages")
+                        Text("Sync pending leads")
                     }
                 }
             }
@@ -110,7 +122,7 @@ fun SyncScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
-                        "Import previous messages",
+                        "Import previous leads",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold,
                     )
@@ -159,8 +171,8 @@ private fun ImportPreviewCard(
                 fontWeight = FontWeight.SemiBold,
             )
             Text(preview.fileName, style = MaterialTheme.typography.titleSmall)
-            Text("${preview.messages.size} messages from the last 90 days")
-            Text("${preview.outsideWindow} older and ${preview.malformed} unrecognized records skipped")
+            Text("${preview.messages.size} first-client lead candidates from full chat history")
+            Text("${preview.malformed} unrecognized records skipped")
 
             state.unresolvedChats.forEach { chat ->
                 OutlinedTextField(

@@ -112,18 +112,59 @@ export async function POST(request: Request) {
     const accessToken = await client.getAccessToken()
     if (!accessToken.token) throw new Error("Google access token unavailable")
 
-    const values = messages.map((message) => [
-      new Date(message.timestamp).toISOString(),
-      message.phoneNumber,
-      message.senderName,
-      message.messageText,
-      message.conversationName,
-      message.source,
-      message.direction,
-      message.uniqueId,
+    const normalizePhone = (value: string) => {
+      const trimmed = value.trim()
+      const digits = trimmed.replace(/\D/g, "")
+      return digits.length >= 7 ? `${trimmed.startsWith("+") ? "+" : ""}${digits}` : ""
+    }
+
+    const incomingByPhone = new Map<string, SyncMessage>()
+    for (const message of [...messages].sort((a, b) => a.timestamp - b.timestamp)) {
+      const phone = normalizePhone(message.phoneNumber)
+      if (phone && !incomingByPhone.has(phone)) incomingByPhone.set(phone, { ...message, phoneNumber: phone })
+    }
+    if (incomingByPhone.size === 0) {
+      return NextResponse.json({ error: "Every lead requires a valid mobile number" }, { status: 400 })
+    }
+
+    const metadataResponse = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}?fields=sheets.properties(title,index)`,
+      { headers: { Authorization: `Bearer ${accessToken.token}` } },
+    )
+    if (!metadataResponse.ok) throw new Error("Unable to read spreadsheet metadata")
+    const metadata = (await metadataResponse.json()) as {
+      sheets?: Array<{ properties?: { title?: string; index?: number } }>
+    }
+    const firstSheet = metadata.sheets
+      ?.map((sheet) => sheet.properties)
+      .filter((properties): properties is { title: string; index?: number } => Boolean(properties?.title))
+      .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))[0]
+    if (!firstSheet) throw new Error("Spreadsheet has no visible sheet")
+    const quotedSheet = `'${firstSheet.title.replace(/'/g, "''")}'`
+
+    const phoneRange = encodeURIComponent(`${quotedSheet}!A:A`)
+    const existingResponse = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${phoneRange}`,
+      { headers: { Authorization: `Bearer ${accessToken.token}` } },
+    )
+    if (!existingResponse.ok) throw new Error("Unable to read existing lead numbers")
+    const existingBody = (await existingResponse.json()) as { values?: unknown[][] }
+    const existingPhones = new Set(
+      (existingBody.values ?? []).map((row) => normalizePhone(String(row[0] ?? ""))).filter(Boolean),
+    )
+
+    const leads = [...incomingByPhone.values()].filter((lead) => !existingPhones.has(lead.phoneNumber))
+    const skipped = messages.length - leads.length
+    if (leads.length === 0) return NextResponse.json({ appended: 0, skipped })
+
+    const values = leads.map((lead) => [
+      lead.phoneNumber,
+      lead.senderName,
+      new Date(lead.timestamp).toISOString(),
+      lead.messageText,
     ])
 
-    const range = encodeURIComponent("A:H")
+    const range = encodeURIComponent(`${quotedSheet}!A:D`)
     const response = await fetch(
       `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
       {
@@ -142,7 +183,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Google Sheets rejected the update" }, { status: 502 })
     }
 
-    return NextResponse.json({ appended: messages.length })
+    return NextResponse.json({ appended: leads.length, skipped })
   } catch (error) {
     console.error("[v0] Sheets sync failed", error instanceof Error ? error.message : "Unknown error")
     return NextResponse.json({ error: "Sheets sync is temporarily unavailable" }, { status: 503 })

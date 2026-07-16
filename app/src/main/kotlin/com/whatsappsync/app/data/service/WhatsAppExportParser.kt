@@ -20,20 +20,18 @@ class WhatsAppExportParser {
         input: InputStream,
         fileName: String,
         conversationName: String = fileName.substringBeforeLast('.'),
-        cutoffMillis: Long = System.currentTimeMillis() - NINETY_DAYS_MS
     ): ParseResult {
         val text = if (fileName.endsWith(".zip", ignoreCase = true)) {
             readTextFromZip(input)
         } else {
             input.bufferedReader(Charsets.UTF_8).use(BufferedReader::readText)
         }
-        return parseText(text, conversationName, cutoffMillis)
+        return parseText(text, conversationName)
     }
 
-    fun parseText(text: String, conversationName: String, cutoffMillis: Long): ParseResult {
+    fun parseText(text: String, conversationName: String): ParseResult {
         val parsed = mutableListOf<Message>()
         var malformed = 0
-        var outsideWindow = 0
         var current: PendingRecord? = null
 
         fun commit() {
@@ -41,8 +39,6 @@ class WhatsAppExportParser {
             val timestamp = parseTimestamp(record.date, record.time)
             if (timestamp == null) {
                 malformed++
-            } else if (timestamp < cutoffMillis) {
-                outsideWindow++
             } else if (record.body.isNotBlank()) {
                 parsed += Message(
                     phoneNumber = record.sender.takeIf { PHONE_PATTERN.containsMatchIn(it) }.orEmpty(),
@@ -73,7 +69,7 @@ class WhatsAppExportParser {
         }
         commit()
 
-        return ParseResult(parsed.distinctBy { it.uniqueId }, malformed, outsideWindow)
+        return ParseResult(parsed.distinctBy { it.uniqueId }, malformed, 0)
     }
 
     private fun readTextFromZip(input: InputStream): String {
@@ -110,7 +106,6 @@ class WhatsAppExportParser {
     )
 
     companion object {
-        const val NINETY_DAYS_MS = 90L * 24L * 60L * 60L * 1_000L
         private val PHONE_PATTERN = Regex("\\+?[0-9][0-9 ()-]{6,}")
         private val RECORD_PATTERN = Regex(
             "^(?:\\[)?(\\d{1,4}[/.\\-]\\d{1,2}[/.\\-]\\d{1,4}),?\\s+" +

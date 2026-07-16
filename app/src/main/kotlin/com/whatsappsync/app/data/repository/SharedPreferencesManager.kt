@@ -43,7 +43,10 @@ class SharedPreferencesManager(context: Context) {
 
     fun addPendingMessage(message: Message) {
         val messages = getPendingMessages().toMutableList()
-        if (messages.none { it.uniqueId == message.uniqueId } &&
+        val alreadyHasNotificationLead = message.source == "notification" && messages.any {
+            it.source == "notification" && it.conversationName.equals(message.conversationName, ignoreCase = true)
+        }
+        if (!alreadyHasNotificationLead && messages.none { it.uniqueId == message.uniqueId } &&
             message.uniqueId !in getSyncedMessageIds()
         ) {
             messages += message
@@ -63,6 +66,13 @@ class SharedPreferencesManager(context: Context) {
 
     fun getPhoneMapping(chatName: String): String =
         encryptedSharedPreferences.getString("phone_${chatName.trim().lowercase()}", "").orEmpty()
+
+    fun saveWhatsAppName(name: String) {
+        encryptedSharedPreferences.edit().putString("whatsapp_display_name", name.trim()).apply()
+    }
+
+    fun getWhatsAppName(): String =
+        encryptedSharedPreferences.getString("whatsapp_display_name", "").orEmpty()
 
     fun saveLastSyncTime(time: Long) {
         encryptedSharedPreferences.edit().putLong("last_sync_time", time).apply()

@@ -2,8 +2,6 @@ package com.whatsappsync.app.data.service
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
-import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import org.junit.Assert.assertEquals
@@ -12,18 +10,16 @@ import org.junit.Test
 
 class WhatsAppExportParserTest {
     private val parser = WhatsAppExportParser()
-    private val dateFormat = SimpleDateFormat("M/d/yy h:mm a", Locale.US)
 
     @Test
     fun parsesAndroidExportAndMultilineMessages() {
-        val cutoff = dateFormat.parse("6/1/26 12:00 AM")!!.time
         val text = """
             7/10/26, 9:15 AM - Alice: First line
             second line
             7/10/26, 9:16 AM - +1 555 123 4567: Hello
         """.trimIndent()
 
-        val result = parser.parseText(text, "Customer chat", cutoff)
+        val result = parser.parseText(text, "Customer chat")
 
         assertEquals(2, result.messages.size)
         assertEquals("First line\nsecond line", result.messages[0].messageText)
@@ -32,38 +28,30 @@ class WhatsAppExportParserTest {
     }
 
     @Test
-    fun excludesRecordsBeforeNinetyDayCutoff() {
-        val cutoff = dateFormat.parse("6/1/26 12:00 AM")!!.time
+    fun includesCompleteHistoryWithoutDateCutoff() {
         val text = """
-            5/31/26, 11:59 PM - Alice: Too old
-            6/1/26, 12:00 AM - Alice: Included
+            1/1/20, 8:00 AM - Alice: Original first message
+            7/10/26, 9:15 AM - Alice: Recent message
         """.trimIndent()
 
-        val result = parser.parseText(text, "Customer chat", cutoff)
+        val result = parser.parseText(text, "Customer chat")
 
-        assertEquals(1, result.messages.size)
-        assertEquals("Included", result.messages.single().messageText)
-        assertEquals(1, result.recordsOutsideWindow)
+        assertEquals(2, result.messages.size)
+        assertEquals("Original first message", result.messages.first().messageText)
+        assertEquals(0, result.recordsOutsideWindow)
     }
 
     @Test
     fun deduplicatesRepeatedExportRecords() {
-        val cutoff = dateFormat.parse("6/1/26 12:00 AM")!!.time
         val line = "7/10/26, 9:15 AM - Alice: Same message"
-
-        val result = parser.parseText("$line\n$line", "Customer chat", cutoff)
-
+        val result = parser.parseText("$line\n$line", "Customer chat")
         assertEquals(1, result.messages.size)
         assertTrue(result.messages.single().uniqueId.isNotBlank())
     }
 
     @Test
     fun parsesIosBracketedTimestamp() {
-        val cutoff = dateFormat.parse("6/1/26 12:00 AM")!!.time
-        val text = "[7/10/26, 9:15:00 AM] Alice: From iPhone"
-
-        val result = parser.parseText(text, "Alice", cutoff)
-
+        val result = parser.parseText("[7/10/26, 9:15:00 AM] Alice: From iPhone", "Alice")
         assertEquals(1, result.messages.size)
         assertEquals("From iPhone", result.messages.single().messageText)
     }
@@ -77,10 +65,8 @@ class WhatsAppExportParserTest {
                 zip.closeEntry()
             }
         }.toByteArray()
-        val cutoff = dateFormat.parse("6/1/26 12:00 AM")!!.time
 
-        val result = parser.parse(ByteArrayInputStream(bytes), "Alice.zip", cutoffMillis = cutoff)
-
+        val result = parser.parse(ByteArrayInputStream(bytes), "Alice.zip")
         assertEquals(1, result.messages.size)
         assertEquals("From ZIP", result.messages.single().messageText)
     }
