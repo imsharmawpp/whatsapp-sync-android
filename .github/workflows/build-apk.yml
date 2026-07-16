@@ -2,51 +2,100 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: gradle
 
-    - name: Set up Android SDK
-      uses: android-actions/setup-android@v3
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-    - name: Restore Gradle wrapper JAR
-      run: |
-        if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-          curl --fail --location --retry 3 \
-            --output gradle/wrapper/gradle-wrapper.jar \
-            https://raw.githubusercontent.com/gradle/gradle/v8.5.0/gradle/wrapper/gradle-wrapper.jar
-        fi
+      - name: Restore Gradle wrapper JAR
+        run: |
+          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
+            curl --fail --location --retry 3 \
+              --output gradle/wrapper/gradle-wrapper.jar \
+              https://raw.githubusercontent.com/gradle/gradle/v8.5.0/gradle/wrapper/gradle-wrapper.jar
+          fi
 
-    - name: Validate Gradle wrapper
-      uses: gradle/actions/wrapper-validation@v4
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
 
-    - name: Test and build debug APK
-      run: |
-        chmod +x gradlew
-        ./gradlew --no-daemon clean testDebugUnitTest assembleDebug --stacktrace
+      - name: Validate required release secrets
+        if: github.event_name == 'push'
+        env:
+          SYNC_API_URL: ${{ secrets.SYNC_API_URL }}
+          SYNC_API_TOKEN: ${{ secrets.SYNC_API_TOKEN }}
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          test -n "$SYNC_API_URL"
+          test -n "$SYNC_API_TOKEN"
+          test -n "$ANDROID_KEYSTORE_BASE64"
+          test -n "$ANDROID_KEYSTORE_PASSWORD"
+          test -n "$ANDROID_KEY_ALIAS"
+          test -n "$ANDROID_KEY_PASSWORD"
 
-    - name: Verify debug APK
-      run: test -s app/build/outputs/apk/debug/app-debug.apk
+      - name: Restore persistent release keystore
+        if: github.event_name == 'push'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/whatsapp-sync-release.jks"
 
-    - name: Upload debug APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: whatsapp-sync-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
-        retention-days: 30
-        if-no-files-found: error
+      - name: Test and build APK
+        env:
+          SYNC_API_URL: ${{ secrets.SYNC_API_URL }}
+          SYNC_API_TOKEN: ${{ secrets.SYNC_API_TOKEN }}
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/whatsapp-sync-release.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          APP_VERSION_CODE: ${{ github.run_number }}
+          APP_VERSION_NAME: 1.1.${{ github.run_number }}
+        run: |
+          chmod +x gradlew
+          if [ "${{ github.event_name }}" = "push" ]; then
+            ./gradlew --no-daemon clean testDebugUnitTest assembleRelease --stacktrace
+          else
+            ./gradlew --no-daemon clean testDebugUnitTest assembleDebug --stacktrace
+          fi
+
+      - name: Verify signed release APK
+        if: github.event_name == 'push'
+        run: |
+          test -s app/build/outputs/apk/release/app-release.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload signed release APK
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: whatsapp-sync-release-${{ github.run_number }}
+          path: app/build/outputs/apk/release/app-release.apk
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Upload pull-request debug APK
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: whatsapp-sync-debug-${{ github.run_number }}
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+          if-no-files-found: error

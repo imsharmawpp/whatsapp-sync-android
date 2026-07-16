@@ -6,136 +6,87 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.whatsappsync.app.BuildConfig
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(
-    onBackClicked: () -> Unit
-) {
-    val spreadsheetId = remember { mutableStateOf("") }
-    val isAuthenticated = remember { mutableStateOf(false) }
-    
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
+fun SettingsScreen(onBackClicked: () -> Unit) {
+    val connected = BuildConfig.SYNC_API_URL.startsWith("https://") && BuildConfig.SYNC_API_TOKEN.isNotBlank()
+
+    Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text("Settings") },
             navigationIcon = {
                 IconButton(onClick = onBackClicked) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                 }
-            }
+            },
         )
-        
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
-                text = "Google Sheets",
-                fontSize = 18.sp,
-                modifier = Modifier.padding(bottom = 16.dp)
+                text = "Private Google Sheets sync",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
             )
-            
-            if (!isAuthenticated.value) {
-                Text(
-                    text = "Not connected to Google Sheets yet",
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                
-                Button(
-                    onClick = {
-                        isAuthenticated.value = true
-                        // TODO: Implement Google OAuth flow
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text("Connect to Google Sheets")
-                }
-            } else {
-                Text(
-                    text = "Connected",
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                
-                OutlinedTextField(
-                    value = spreadsheetId.value,
-                    onValueChange = { spreadsheetId.value = it },
-                    label = { Text("Spreadsheet ID") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri)
-                )
-                
-                Text(
-                    text = "Find your Spreadsheet ID in the URL: docs.google.com/spreadsheets/d/[ID]/edit",
-                    fontSize = 12.sp,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                
-                OutlinedButton(
-                    onClick = {
-                        isAuthenticated.value = false
-                        spreadsheetId.value = ""
-                        // TODO: Implement logout
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Disconnect")
+                    Text(
+                        text = if (connected) "Connected" else "Not configured",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (connected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                    )
+                    Text(
+                        if (connected) {
+                            "Messages are sent through the private sync service. Google authorization does not expire on this device."
+                        } else {
+                            "Install an APK built with the private sync URL and token."
+                        },
+                    )
                 }
             }
-            
+
             Text(
-                text = "App Info",
-                fontSize = 18.sp,
-                modifier = Modifier.padding(top = 32.dp, bottom = 16.dp)
+                text = "App info",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
             )
-            
-            SettingItem(label = "Version", value = "1.0.0")
-            SettingItem(label = "Build", value = "1")
+            SettingItem(label = "Version", value = BuildConfig.VERSION_NAME)
+            SettingItem(label = "Build", value = BuildConfig.VERSION_CODE.toString())
         }
     }
 }
 
 @Composable
-fun SettingItem(
-    label: String,
-    value: String
-) {
+private fun SettingItem(label: String, value: String) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp)
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(text = label, fontSize = 12.sp)
-        Text(text = value, fontSize = 14.sp)
+        Text(text = label, style = MaterialTheme.typography.labelMedium)
+        Text(text = value, style = MaterialTheme.typography.bodyMedium)
     }
 }

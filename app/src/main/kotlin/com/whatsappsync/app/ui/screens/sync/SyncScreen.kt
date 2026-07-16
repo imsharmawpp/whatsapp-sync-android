@@ -133,7 +133,7 @@ fun SyncScreen(
 
             StatusCard(state)
 
-            if (state.phase == SyncViewModel.Phase.Error || state.phase == SyncViewModel.Phase.AuthExpired) {
+            if (state.phase == SyncViewModel.Phase.Error) {
                 OutlinedButton(onClick = viewModel::retry, modifier = Modifier.fillMaxWidth()) {
                     Text("Try again")
                 }

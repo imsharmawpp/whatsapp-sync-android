@@ -38,7 +38,7 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
         val outsideWindow: Int,
     )
 
-    enum class Phase { Idle, Working, Preview, Success, Empty, AuthExpired, Error }
+    enum class Phase { Idle, Working, Preview, Success, Empty, Error }
 
     private val app = application
     private val store = SharedPreferencesManager(application)
@@ -186,10 +186,8 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun showError(error: Throwable) {
-        val expired = error is GoogleSheetsClient.AuthenticationExpiredException
-        if (expired) sheets.clearAuthentication()
         _state.value = queueState(error.message ?: "Operation failed. Please retry.")
-            .copy(phase = if (expired) Phase.AuthExpired else Phase.Error)
+            .copy(phase = Phase.Error)
     }
 
     private fun queryFileName(uri: Uri): String {

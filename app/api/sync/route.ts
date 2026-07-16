@@ -1,0 +1,131 @@
+import { GoogleAuth } from "google-auth-library"
+import { NextResponse } from "next/server"
+
+export const runtime = "nodejs"
+
+const MAX_MESSAGES = 500
+const MAX_BODY_BYTES = 1_000_000
+const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets"
+
+type SyncMessage = {
+  timestamp: number
+  phoneNumber: string
+  senderName: string
+  messageText: string
+  conversationName: string
+  source: string
+  direction: string
+  uniqueId: string
+}
+
+function unauthorized() {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+}
+
+function isString(value: unknown, maxLength: number): value is string {
+  return typeof value === "string" && value.length <= maxLength
+}
+
+function isMessage(value: unknown): value is SyncMessage {
+  if (!value || typeof value !== "object") return false
+  const message = value as Record<string, unknown>
+  return (
+    typeof message.timestamp === "number" &&
+    Number.isFinite(message.timestamp) &&
+    message.timestamp > 0 &&
+    isString(message.phoneNumber, 64) &&
+    isString(message.senderName, 256) &&
+    isString(message.messageText, 20_000) &&
+    isString(message.conversationName, 256) &&
+    isString(message.source, 32) &&
+    isString(message.direction, 32) &&
+    isString(message.uniqueId, 256) &&
+    message.uniqueId.length > 0
+  )
+}
+
+function parseServiceAccount() {
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON
+  if (!raw) throw new Error("Google service account is not configured")
+
+  try {
+    const credentials = JSON.parse(raw)
+    if (!credentials.client_email || !credentials.private_key) throw new Error()
+    return credentials
+  } catch {
+    throw new Error("Google service account configuration is invalid")
+  }
+}
+
+export async function POST(request: Request) {
+  const configuredToken = process.env.APP_SYNC_TOKEN
+  const authorization = request.headers.get("authorization")
+  if (!configuredToken || authorization !== `Bearer ${configuredToken}`) return unauthorized()
+
+  const contentLength = Number(request.headers.get("content-length") ?? "0")
+  if (contentLength > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "Request is too large" }, { status: 413 })
+  }
+
+  let body: unknown
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 })
+  }
+
+  const messages = (body as { messages?: unknown })?.messages
+  if (!Array.isArray(messages) || messages.length < 1 || messages.length > MAX_MESSAGES) {
+    return NextResponse.json({ error: `Send between 1 and ${MAX_MESSAGES} messages` }, { status: 400 })
+  }
+  if (!messages.every(isMessage)) {
+    return NextResponse.json({ error: "One or more messages are invalid" }, { status: 400 })
+  }
+
+  const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID
+  if (!spreadsheetId) {
+    return NextResponse.json({ error: "Spreadsheet is not configured" }, { status: 503 })
+  }
+
+  try {
+    const auth = new GoogleAuth({ credentials: parseServiceAccount(), scopes: [SHEETS_SCOPE] })
+    const client = await auth.getClient()
+    const accessToken = await client.getAccessToken()
+    if (!accessToken.token) throw new Error("Google access token unavailable")
+
+    const values = messages.map((message) => [
+      new Date(message.timestamp).toISOString(),
+      message.phoneNumber,
+      message.senderName,
+      message.messageText,
+      message.conversationName,
+      message.source,
+      message.direction,
+      message.uniqueId,
+    ])
+
+    const range = encodeURIComponent("Messages!A:H")
+    const response = await fetch(
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${range}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken.token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ values }),
+      },
+    )
+
+    if (!response.ok) {
+      const details = await response.text()
+      console.error("[v0] Google Sheets append failed", response.status, details.slice(0, 500))
+      return NextResponse.json({ error: "Google Sheets rejected the update" }, { status: 502 })
+    }
+
+    return NextResponse.json({ appended: messages.length })
+  } catch (error) {
+    console.error("[v0] Sheets sync failed", error instanceof Error ? error.message : "Unknown error")
+    return NextResponse.json({ error: "Sheets sync is temporarily unavailable" }, { status: 503 })
+  }
+}
