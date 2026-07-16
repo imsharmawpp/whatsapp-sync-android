@@ -24,6 +24,20 @@ jobs:
         distribution: 'temurin'
         cache: gradle
 
+    - name: Set up Gradle Wrapper
+      run: |
+        cd gradle/wrapper
+        curl -L -o gradle-8.5-wrapper.jar https://repo.gradle.org/gradle/distributions/gradle-8.5-bin.zip
+        if [ ! -f gradle-wrapper.jar ]; then
+          # Download using alternative method if first fails
+          curl -L -o gradle-8.5-all.zip "https://services.gradle.org/distributions/gradle-8.5-all.zip" 2>/dev/null || \
+          curl -L -o gradle-8.5-all.zip "https://cache-redirector.jetbrains.com/services.gradle.org/distributions/gradle-8.5-all.zip"
+          unzip -q gradle-8.5-all.zip gradle-8.5/lib/gradle-wrapper.jar
+          cp gradle-8.5/lib/gradle-wrapper.jar .
+          rm -rf gradle-8.5 gradle-8.5-all.zip
+        fi
+        cd ../..
+
     - name: Grant execute permission to Gradle
       run: chmod +x ./gradlew
 
