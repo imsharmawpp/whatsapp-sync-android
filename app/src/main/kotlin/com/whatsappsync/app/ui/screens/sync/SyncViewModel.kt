@@ -51,8 +51,13 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
     init {
         viewModelScope.launch {
             ShareImportCoordinator.incoming.filterNotNull().collect { uris ->
-                ShareImportCoordinator.consume(uris)
-                selectExports(uris)
+                if (uris.isEmpty()) {
+                    _state.value = queueState("The WhatsApp share contained no readable TXT or ZIP file.")
+                        .copy(phase = Phase.Error)
+                    ShareImportCoordinator.consume(uris)
+                } else {
+                    selectExports(uris, consumeShareAfterStart = true)
+                }
             }
         }
     }
@@ -67,11 +72,12 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
 
     fun selectExport(uri: Uri) = selectExports(listOf(uri))
 
-    fun selectExports(uris: List<Uri>) {
+    fun selectExports(uris: List<Uri>, consumeShareAfterStart: Boolean = false) {
         if (uris.isEmpty()) return
         retryAction = { selectExports(uris) }
         viewModelScope.launch {
             _state.value = queueState("Reading WhatsApp export…").copy(phase = Phase.Working)
+            if (consumeShareAfterStart) ShareImportCoordinator.consume(uris)
             runCatching {
                 withContext(Dispatchers.IO) {
                     uris.map { uri ->

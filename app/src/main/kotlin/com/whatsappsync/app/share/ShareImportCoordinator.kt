@@ -14,11 +14,19 @@ object ShareImportCoordinator {
     fun accept(intent: Intent?) {
         val shareIntent = intent ?: return
         if (shareIntent.action !in setOf(Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE)) return
-        val uris = when (shareIntent.action) {
-            Intent.ACTION_SEND_MULTIPLE -> shareIntent.sharedStreams()
-            else -> listOfNotNull(shareIntent.sharedStream())
-        }
-        if (uris.isNotEmpty()) _incoming.value = uris.distinct()
+
+        val uris = buildList {
+            addAll(shareIntent.sharedStreams())
+            shareIntent.sharedStream()?.let(::add)
+            shareIntent.clipData?.let { clipData ->
+                repeat(clipData.itemCount) { index ->
+                    clipData.getItemAt(index).uri?.let(::add)
+                }
+            }
+            shareIntent.data?.let(::add)
+        }.distinct()
+
+        _incoming.value = uris
     }
 
     fun consume(uris: List<Uri>) {
