@@ -34,7 +34,8 @@ import com.whatsappsync.app.data.repository.SharedPreferencesManager
 @Composable
 fun SettingsScreen(onBackClicked: () -> Unit) {
     val connected = BuildConfig.SYNC_API_URL.startsWith("https://") && BuildConfig.SYNC_API_TOKEN.isNotBlank()
-    val store = remember { SharedPreferencesManager(LocalContext.current.applicationContext) }
+    val context = LocalContext.current.applicationContext
+    val store = remember(context) { SharedPreferencesManager(context) }
     var whatsappName by remember { mutableStateOf(store.getWhatsAppName()) }
     var savedName by remember { mutableStateOf(store.getWhatsAppName()) }
 
