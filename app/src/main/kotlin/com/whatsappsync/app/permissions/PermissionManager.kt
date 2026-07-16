@@ -30,7 +30,7 @@ class PermissionManager(private val context: Context) {
 
     fun notificationListenerEnabled(): Boolean {
         val expected = ComponentName(context, WhatsAppNotificationListener::class.java)
-        return enabledComponents(Settings.Secure.ENABLED_NOTIFICATION_LISTENERS).any {
+        return enabledComponents("enabled_notification_listeners").any {
             it == expected
         }
     }

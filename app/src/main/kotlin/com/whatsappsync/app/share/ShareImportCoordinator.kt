@@ -12,10 +12,11 @@ object ShareImportCoordinator {
     val incoming = _incoming.asStateFlow()
 
     fun accept(intent: Intent?) {
-        if (intent?.action !in setOf(Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE)) return
-        val uris = when (intent.action) {
-            Intent.ACTION_SEND_MULTIPLE -> intent.sharedStreams()
-            else -> listOfNotNull(intent.sharedStream())
+        val shareIntent = intent ?: return
+        if (shareIntent.action !in setOf(Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE)) return
+        val uris = when (shareIntent.action) {
+            Intent.ACTION_SEND_MULTIPLE -> shareIntent.sharedStreams()
+            else -> listOfNotNull(shareIntent.sharedStream())
         }
         if (uris.isNotEmpty()) _incoming.value = uris.distinct()
     }
