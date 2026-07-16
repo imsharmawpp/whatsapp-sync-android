@@ -63,7 +63,7 @@ class GoogleSheetsClient(context: Context) {
         }.toString().toRequestBody("application/json".toMediaType())
 
         val request = Request.Builder()
-            .url(BuildConfig.SYNC_API_URL.trimEnd('/'))
+            .url(syncEndpoint())
             .header("Authorization", "Bearer ${BuildConfig.SYNC_API_TOKEN}")
             .post(payload)
             .build()
@@ -79,8 +79,13 @@ class GoogleSheetsClient(context: Context) {
         }
     }
 
+    private fun syncEndpoint(): String {
+        val configuredUrl = BuildConfig.SYNC_API_URL.trim().trimEnd('/')
+        return if (configuredUrl.endsWith(SYNC_API_PATH)) configuredUrl else "$configuredUrl$SYNC_API_PATH"
+    }
+
     fun isConfigured(): Boolean =
-        BuildConfig.SYNC_API_URL.startsWith("https://") && BuildConfig.SYNC_API_TOKEN.isNotBlank()
+        BuildConfig.SYNC_API_URL.trim().startsWith("https://") && BuildConfig.SYNC_API_TOKEN.isNotBlank()
 
     private fun checkConfiguration() {
         check(isConfigured()) { "Private Sheets sync is not configured in this APK." }
@@ -88,5 +93,6 @@ class GoogleSheetsClient(context: Context) {
 
     companion object {
         private const val BATCH_SIZE = 200
+        private const val SYNC_API_PATH = "/api/sync"
     }
 }
