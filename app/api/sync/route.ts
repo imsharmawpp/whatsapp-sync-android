@@ -128,26 +128,45 @@ export async function POST(request: Request) {
     }
 
     const metadataResponse = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}?fields=sheets.properties(title,index)`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}?fields=sheets.properties(title,index,hidden)`,
       { headers: { Authorization: `Bearer ${accessToken.token}` } },
     )
     if (!metadataResponse.ok) throw new Error("Unable to read spreadsheet metadata")
     const metadata = (await metadataResponse.json()) as {
-      sheets?: Array<{ properties?: { title?: string; index?: number } }>
+      sheets?: Array<{ properties?: { title?: string; index?: number; hidden?: boolean } }>
     }
-    const firstSheet = metadata.sheets
+    const sheetProperties = metadata.sheets
       ?.map((sheet) => sheet.properties)
-      .filter((properties): properties is { title: string; index?: number } => Boolean(properties?.title))
+      .filter((properties): properties is { title: string; index?: number; hidden?: boolean } => Boolean(properties?.title)) ?? []
+    const firstSheet = sheetProperties
+      .filter((properties) => !properties.hidden && properties.title !== "_whatsapp_lead_index")
       .sort((a, b) => (a.index ?? 0) - (b.index ?? 0))[0]
     if (!firstSheet) throw new Error("Spreadsheet has no visible sheet")
     const quotedSheet = `'${firstSheet.title.replace(/'/g, "''")}'`
 
-    const phoneRange = encodeURIComponent(`${quotedSheet}!A:A`)
+    if (!sheetProperties.some((properties) => properties.title === "_whatsapp_lead_index")) {
+      const createIndexResponse = await fetch(
+        `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}:batchUpdate`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken.token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            requests: [{ addSheet: { properties: { title: "_whatsapp_lead_index", hidden: true } } }],
+          }),
+        },
+      )
+      if (!createIndexResponse.ok) throw new Error("Unable to create lead duplicate index")
+    }
+
+    const indexRange = encodeURIComponent("'_whatsapp_lead_index'!A:A")
     const existingResponse = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${phoneRange}`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(spreadsheetId)}/values/${indexRange}`,
       { headers: { Authorization: `Bearer ${accessToken.token}` } },
     )
-    if (!existingResponse.ok) throw new Error("Unable to read existing lead numbers")
+    if (!existingResponse.ok) throw new Error("Unable to read lead duplicate index")
     const existingBody = (await existingResponse.json()) as { values?: unknown[][] }
     const existingPhones = new Set(
       (existingBody.values ?? []).map((row) => normalizePhone(String(row[0] ?? ""))).filter(Boolean),
@@ -173,7 +192,7 @@ export async function POST(request: Request) {
           Authorization: `Bearer ${accessToken.token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ values }),
+        body: JSON.stringify({ majorDimension: "ROWS", values }),
       },
     )
 
