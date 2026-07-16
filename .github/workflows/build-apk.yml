@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, develop, whatsapp-sync-fix]
   pull_request:
     branches: [main]
 
