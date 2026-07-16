@@ -25,15 +25,14 @@ jobs:
         cache: gradle
 
     - name: Set up Gradle
-      uses: gradle-actions/gradle-build-action@v2
+      uses: gradle/gradle-build-action@v3
       with:
         gradle-version: 8.5
 
     - name: Build APK
-      uses: gradle-actions/gradle-build-action@v2
+      uses: gradle/gradle-build-action@v3
       with:
         arguments: assembleDebug --stacktrace
-        gradle-version: 8.5
 
     - name: Find APK files
       if: success()
