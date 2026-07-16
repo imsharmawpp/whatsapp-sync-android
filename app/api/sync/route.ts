@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "node:crypto"
 import { GoogleAuth } from "google-auth-library"
 import { NextResponse } from "next/server"
 
@@ -57,10 +58,28 @@ function parseServiceAccount() {
   }
 }
 
-export async function POST(request: Request) {
-  const configuredToken = process.env.APP_SYNC_TOKEN
+function isAuthorized(request: Request): boolean {
   const authorization = request.headers.get("authorization")
-  if (!configuredToken || authorization !== `Bearer ${configuredToken}`) return unauthorized()
+  if (!authorization?.startsWith("Bearer ")) return false
+
+  const actualToken = authorization.slice("Bearer ".length)
+  const configuredToken = process.env.APP_SYNC_TOKEN
+  if (configuredToken) {
+    const actual = Buffer.from(actualToken)
+    const expected = Buffer.from(configuredToken)
+    if (actual.length === expected.length && timingSafeEqual(actual, expected)) return true
+  }
+
+  const configuredDigest = process.env.APP_SYNC_TOKEN_SHA256?.trim().toLowerCase()
+  if (!configuredDigest || !/^[a-f0-9]{64}$/.test(configuredDigest)) return false
+
+  const actualDigest = createHash("sha256").update(actualToken).digest()
+  const expectedDigest = Buffer.from(configuredDigest, "hex")
+  return actualDigest.length === expectedDigest.length && timingSafeEqual(actualDigest, expectedDigest)
+}
+
+export async function POST(request: Request) {
+  if (!isAuthorized(request)) return unauthorized()
 
   const contentLength = Number(request.headers.get("content-length") ?? "0")
   if (contentLength > MAX_BODY_BYTES) {
