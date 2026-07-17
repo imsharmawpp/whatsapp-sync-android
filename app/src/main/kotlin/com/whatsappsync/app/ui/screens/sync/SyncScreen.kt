@@ -4,7 +4,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,7 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -21,7 +19,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -61,7 +58,7 @@ fun SyncScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("WhatsApp to Sheets") },
+            title = { Text("Automatic lead capture") },
             navigationIcon = {
                 IconButton(onClick = onBackClicked, enabled = !working) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -81,70 +78,31 @@ fun SyncScreen(
                     modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Text(
-                        "Pending queue",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text("${state.pendingCount} total lead candidates")
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        Text("Exports: ${state.exportCount}")
-                        Text("Notifications: ${state.notificationCount}")
-                    }
-                    if (state.preview == null) {
-                        state.unresolvedChats.forEach { chat ->
-                            OutlinedTextField(
-                                value = state.phoneNumbers[chat].orEmpty(),
-                                onValueChange = { viewModel.setPhoneNumber(chat, it) },
-                                label = { Text("Mobile number for $chat") },
-                                supportingText = { Text("Required once; reused for future notifications") },
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-                        }
-                    }
-                    Button(
-                        onClick = viewModel::syncPendingMessages,
-                        enabled = !working && state.pendingCount > 0,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text("Sync pending leads")
-                    }
+                    Text("New WhatsApp Business leads", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                    Text("Incoming one-to-one messages are resolved through their number or your phone contacts and sent to Google Sheets automatically.")
+                    Text("Waiting for identity: ${state.unresolvedChats.size}")
+                    Text("Captured notifications: ${state.notificationCount}")
                 }
             }
 
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(
                     modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    Text(
-                        "Import previous leads",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text("Export chats without media from WhatsApp, then share them to this app or select TXT/ZIP files here.")
+                    Text("Old WhatsApp chats", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                    Text("In WhatsApp Business, export a chat without media and share its TXT/ZIP directly to this app. The first incoming customer message uploads automatically.")
                     OutlinedButton(
-                        onClick = {
-                            picker.launch(arrayOf("text/plain", "application/zip", "application/octet-stream"))
-                        },
+                        onClick = { picker.launch(arrayOf("text/plain", "application/zip", "application/octet-stream")) },
                         enabled = !working,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text("Choose exported chats")
+                        Text("Select exported chats")
                     }
                 }
             }
 
-            state.preview?.let { preview ->
-                ImportPreviewCard(preview = preview, state = state, viewModel = viewModel)
-            }
-
             StatusCard(state)
-
             if (state.phase == SyncViewModel.Phase.Error) {
                 OutlinedButton(onClick = viewModel::retry, modifier = Modifier.fillMaxWidth()) {
                     Text("Try again")
@@ -155,82 +113,20 @@ fun SyncScreen(
 }
 
 @Composable
-private fun ImportPreviewCard(
-    preview: SyncViewModel.ImportPreview,
-    state: SyncViewModel.UiState,
-    viewModel: SyncViewModel,
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Text(
-                "Confirm import",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(preview.fileName, style = MaterialTheme.typography.titleSmall)
-            Text("${preview.messages.size} first-client lead candidates from full chat history")
-            Text("${preview.malformed} unrecognized records skipped")
-
-            state.unresolvedChats.forEach { chat ->
-                OutlinedTextField(
-                    value = state.phoneNumbers[chat].orEmpty(),
-                    onValueChange = { viewModel.setPhoneNumber(chat, it) },
-                    label = { Text("Mobile number for $chat") },
-                    supportingText = { Text("Saved once and reused for future imports from this chat") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                OutlinedButton(
-                    onClick = viewModel::cancelImport,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text("Cancel")
-                }
-                Button(
-                    onClick = viewModel::confirmImport,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text("Add to queue")
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun StatusCard(state: SyncViewModel.UiState) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
+            modifier = Modifier.fillMaxWidth().padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (state.phase == SyncViewModel.Phase.Working) {
-                if (state.progress == null) {
-                    CircularProgressIndicator()
-                } else {
-                    LinearProgressIndicator(
-                        progress = { state.progress },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
+                if (state.progress == null) CircularProgressIndicator() else LinearProgressIndicator(
+                    progress = { state.progress },
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
-            Text(
-                state.status,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyMedium,
-            )
+            Text(state.status, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

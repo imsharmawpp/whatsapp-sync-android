@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.whatsappsync.app.data.models.Message
 import com.whatsappsync.app.data.repository.SharedPreferencesManager
+import com.whatsappsync.app.data.service.AutomaticLeadSync
 import com.whatsappsync.app.data.service.GoogleSheetsClient
 import com.whatsappsync.app.data.service.WhatsAppExportParser
 import com.whatsappsync.app.share.ShareImportCoordinator
@@ -43,6 +44,7 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
     private val app = application
     private val store = SharedPreferencesManager(application)
     private val sheets = GoogleSheetsClient(application)
+    private val automaticSync = AutomaticLeadSync(application)
     private val parser = WhatsAppExportParser()
     private val _state = MutableStateFlow(queueState())
     val state = _state.asStateFlow()
@@ -103,31 +105,28 @@ class SyncViewModel(application: Application) : AndroidViewModel(application) {
                     .groupBy { it.conversationName }
                     .mapNotNull { (_, chatMessages) -> chatMessages.minByOrNull(Message::timestamp) }
                     .distinctBy { it.conversationName.trim().lowercase() }
-                val name = if (parsed.size == 1) parsed.first().second else "${parsed.size} exported chats"
-                val preview = ImportPreview(
-                    fileName = name,
-                    messages = messages,
-                    malformed = parsed.sumOf { it.first.malformedRecords },
-                    outsideWindow = parsed.sumOf { it.first.recordsOutsideWindow },
-                )
-                val chats = messages.map { it.conversationName }.toSortedSet()
-                val numbers = chats.associateWith { store.getPhoneMapping(it) }
-                val unresolved = chats.filterTo(mutableSetOf()) { chat ->
-                    numbers[chat].isNullOrBlank() && messages.none {
-                        it.conversationName == chat && it.phoneNumber.isNotBlank()
-                    }
+                if (messages.isEmpty()) {
+                    _state.value = queueState("No incoming customer message was found in this export.")
+                        .copy(phase = Phase.Empty)
+                    return@onSuccess
                 }
-                _state.value = queueState().copy(
-                    phase = if (messages.isEmpty()) Phase.Empty else Phase.Preview,
-                    preview = preview.takeIf { messages.isNotEmpty() },
-                    phoneNumbers = numbers,
-                    unresolvedChats = unresolved,
-                    status = if (messages.isEmpty()) {
-                        "No client messages were found. Check your WhatsApp display name in Settings."
+
+                _state.value = queueState("Resolving customer identity and syncing ${messages.size} lead(s)…")
+                    .copy(phase = Phase.Working)
+                var synced = 0
+                messages.forEach { message ->
+                    automaticSync.resolveAndSync(message.copy(source = "export"))
+                        .onSuccess { synced += it }
+                        .onFailure { throw it }
+                }
+                val unresolved = store.getPendingMessages().count { it.phoneNumber.isBlank() }
+                _state.value = queueState(
+                    if (unresolved == 0) {
+                        "Shared export synced automatically. $synced lead(s) processed."
                     } else {
-                        "Review the first client lead before adding it to the queue."
+                        "$synced lead(s) synced. $unresolved export(s) are waiting for WhatsApp to expose a unique number."
                     },
-                )
+                ).copy(phase = if (synced > 0) Phase.Success else Phase.Empty)
             }.onFailure(::showError)
         }
     }
