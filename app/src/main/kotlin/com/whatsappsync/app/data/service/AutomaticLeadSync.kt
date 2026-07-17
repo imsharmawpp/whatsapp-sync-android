@@ -3,6 +3,8 @@ package com.whatsappsync.app.data.service
 import android.content.Context
 import com.whatsappsync.app.data.models.Message
 import com.whatsappsync.app.data.repository.SharedPreferencesManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class AutomaticLeadSync(context: Context) {
     private val appContext = context.applicationContext
@@ -10,7 +12,7 @@ class AutomaticLeadSync(context: Context) {
     private val sheets = GoogleSheetsClient(appContext)
     private val contacts = ContactResolver(appContext)
 
-    suspend fun resolveAndSync(message: Message): Result<Int> {
+    suspend fun resolveAndSync(message: Message): Result<Int> = withContext(Dispatchers.IO) {
         val knownPhone = ContactResolver.normalizePhone(message.phoneNumber)
             ?: ContactResolver.normalizePhone(message.conversationName)
             ?: ContactResolver.normalizePhone(message.senderName)
@@ -22,7 +24,7 @@ class AutomaticLeadSync(context: Context) {
             contacts.resolve(message.conversationName.ifBlank { message.senderName })
         }
 
-        return when (resolved) {
+        when (resolved) {
             ContactResolver.Result.Ambiguous, ContactResolver.Result.Unresolved -> {
                 store.addPendingMessage(message.copy(phoneNumber = ""))
                 Result.success(0)
